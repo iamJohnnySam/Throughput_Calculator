@@ -1,0 +1,58 @@
+{
+  "Loading": {
+    "In": true,
+    "Time": 0,
+    "Robot": false,
+    "Waiting": true,
+    "Capacity": 2
+  },
+  "Operation1": {
+    "In/Out": false,
+    "Time": 300,
+    "Robot": false,
+    "Waiting": false,
+    "Capacity": 1
+  },
+  "Operation2": {
+    "In/Out": false,
+    "Time": 300,
+    "Robot": true,
+    "Waiting": true,
+    "Capacity": 1
+  },
+  "Operation3": {
+    "In/Out": false,
+    "Time": 5880,
+    "Robot": false,
+    "Waiting": true,
+    "Capacity": 2
+  },
+  "Operation4": {
+    "In/Out": false,
+    "Time": 600,
+    "Robot": false,
+    "Waiting": false,
+    "Capacity": 1
+  },
+  "Operation5": {
+    "In/Out": false,
+    "Time": 300,
+    "Robot": true,
+    "Waiting": true,
+    "Capacity": 1
+  },
+  "Operation6": {
+    "In/Out": false,
+    "Time": 12840,
+    "Robot": false,
+    "Waiting": true,
+    "Capacity": 2
+  },
+  "Unloading": {
+    "Out": true,
+    "Time": 0,
+    "Robot": false,
+    "Waiting": true,
+    "Capacity": 2
+  }
+}
