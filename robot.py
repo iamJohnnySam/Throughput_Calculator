@@ -52,8 +52,6 @@ class Robot:
 
     def run(self):
         if self._get_action:
-            self._current_time = self._current_time + 1
-
             if self._current_time >= self._transfer_time:
                 logging.log(f"ROBOT {self._robot_id} > RELEASED {self.stock[0].payload_id} "
                             f"FROM {self.stock[0].current_station}")
@@ -64,6 +62,8 @@ class Robot:
                 logging.log(f"ROBOT {self._robot_id} > PAYLOAD {self.stock[0].payload_id} "
                             f"AT {self.stock[0].current_station}")
                 data.stations[self.stock[0].current_station].robot_pickup(self.stock[0])
+
+            self._current_time = self._current_time + 1
 
         if self._put_action:
             if self._current_time < self._transfer_time:
