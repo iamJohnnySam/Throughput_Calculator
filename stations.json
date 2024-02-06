@@ -4,7 +4,7 @@
     "Time": 0,
     "Robot": false,
     "Waiting": true,
-    "Capacity": 2
+    "Capacity": 100000
   },
   "Operation1": {
     "In/Out": false,
@@ -53,6 +53,6 @@
     "Time": 0,
     "Robot": false,
     "Waiting": true,
-    "Capacity": 2
+    "Capacity": 100000
   }
 }

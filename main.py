@@ -1,9 +1,21 @@
+import json
+
 import data
 import logging
+from payload import Payload
+from robot import Robot
+from station import Station
 
 process_time = 22 * 60 * 60
 input_every = 600
 new_payload_id = 0
+robots = {1: Robot(1)}
+payloads = {}
+
+
+with open("sequence.json", "r") as file:
+    sequence_file = json.load(file)
+sequence = sequence_file["Sequence"]
 
 for sec in range(process_time):
     logging.log(f"\nTime = {sec}")
@@ -11,23 +23,28 @@ for sec in range(process_time):
 
     if sec % input_every == 0:
         new_payload_id = new_payload_id + 1
-        data.create_payload(sec, new_payload_id)
-        data.stations["Loading"].current_capacity.append(new_payload_id)
+        payloads[new_payload_id]: Payload = Payload(create=sec,
+                                                    payload_id=new_payload_id,
+                                                    current_station=sequence[0])
+        logging.log("Payload Created with ID > " + str(new_payload_id))
 
-    for payload_id in data.payloads.keys():
-        current_step = data.payloads[payload_id].get_step()
-        if current_step == len(data.sequence):
-            del data.payloads[payload_id]
-            logging.log("PAYLOAD COMPLETE > " + str(payload_id))
-            continue
+        data.stations[sequence[0]].stock.append(payloads[new_payload_id])
 
-        if data.payloads[payload_id].get_waiting():
-            next_station = data.sequence[current_step + 1]
-            prev_station = data.sequence[current_step]
+    for payload_id in payloads.keys():
+        # IF PAYLOAD WAITING
+        if payloads[payload_id].waiting:
+            next_station = payloads[payload_id].next_station
 
-            if data.stations[next_station].get_availability():
-                data.robot1.pick(sec, payload_id, next_station, prev_station)
+            if data.stations[next_station].available:
+                for robot in robots:
+                    if robots[robot].available:
+                        logging.log(f"ROBOT {robots[robot].robot_id} > Pick up Initiated for "
+                                    f"Payload {str(payload_id)} at {next_station}.")
+                        robots[robot].pick(payload=payloads[payload_id])
+                        break
 
-    data.robot1.run(sec)
+    for robot in robots.keys():
+        robots[robot].run()
+
     for station in data.stations.keys():
-        data.stations[station].run(sec)
+        data.stations[station].run()

@@ -1,12 +1,85 @@
 import data
 import logging
+from payload import Payload
 
 
 class Robot:
-    def __init__(self):
+    def __init__(self, robot_id):
+        self._robot_id = robot_id
+
+        self._stock = []
+        self._capacity = 1
+
+        self._current_time = 0
+        self._get_action = False
+        self._put_action = False
+        self._at_station = False
+
+        self._transfer_time = 15
+
+    @property
+    def stock(self):
+        return self._stock
+
+    @stock.setter
+    def stock(self, value):
+        self._stock = value
+
+    @property
+    def robot_id(self):
+        return self._robot_id
+
+    @property
+    def available(self):
+        return len(self.stock) < self._capacity
+
+    def pick(self, payload: Payload):
+        payload.robot_pickup()
+        self._stock.append(payload)
+        self._current_time = 0
+        self._get_action = True
+        self._put_action = False
+        self._at_station = False
+
+    def place(self, payload: Payload, next_station: str):
+        logging.log(f"ROBOT {self._robot_id} PLACE INITIATED FOR PAYLOAD {payload.payload_id} TO {next_station}")
+        payload.robot_pickup()
+        self._current_time = 0
+        self._get_action = False
+        self._put_action = True
+        self._at_station = False
+        payload.current_station = next_station
+
+    def run(self):
+        if self._get_action:
+            self._current_time = self._current_time + 1
+
+            if self._current_time < self._transfer_time and data.stations[self.stock[0].current_station].robot_release:
+                self.place(self.stock[0], self.stock[0].next_station)
+                self._get_action = False
+
+            elif self._current_time == self._transfer_time:
+                logging.log(f"ROBOT {self._robot_id} > PAYLOAD {self.stock[0].payload_id} AT {self.stock[0].current_station}")
+                self._at_station = True
+
+                data.stations[self.stock[0].current_station].robot_pickup(self.stock[0])
+
+        if self._put_action:
+            if self._current_time < self._transfer_time:
+                self._current_time = self._current_time + 1
+            else:
+                logging.log(f"ROBOT {self._robot_id} > PLACE ARRIVE {self.stock[0].payload_id} AT {self.stock[0].current_station}")
+                self._put_action = False
+                self._at_station = True
+                self._stock.remove(self.stock[0])
+
+                data.stations[self.stock[0].current_station].robot_place(self.stock[0])
+
+        """
+        
+
         self.current_capacity = []
         self.log = {}
-        self.capacity = 1
 
         self.get_time = 15
         self.put_time = 15
@@ -40,18 +113,6 @@ class Robot:
                             self.log[transfer]["robot_released"] = True
                             data.stations[self.log[transfer]["next_station"]].send_out_payload(self.log[transfer]["payload"])
 
-    def pick(self, time, payload_id: int, station: str, p_station: str):
-        data.payloads[payload_id].pick_up()
-        data.stations[p_station].send_out_payload(payload_id)
-        self.current_capacity.append(self.transfer_id)
-        self.log[self.transfer_id] = {"payload_id": payload_id,
-                                      "next_station": station,
-                                      "in_time": time,
-                                      "robot_released": not data.stations[station].robot_needed,
-                                      "get_elapsed": 0,
-                                      "put_elapsed": 0}
-        self.transfer_id = self.transfer_id + 1
-        logging.log(f"ROBOT > PICK {payload_id} > FROM {station}")
 
     def place(self, transfer_id, release: bool, time):
         data.payloads[self.log[transfer_id]["payload_id"]].drop_off()
@@ -60,4 +121,4 @@ class Robot:
         if release:
             self.current_capacity.remove(transfer_id)
             logging.log(f'ROBOT > PLACE {self.log[transfer_id]["payload_id"]} '
-                        f'> TO {self.log[transfer_id]["next_station"]}')
+                        f'> TO {self.log[transfer_id]["next_station"]}')"""
