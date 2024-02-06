@@ -1,5 +1,6 @@
 import json
 
+import data
 import logging
 
 
@@ -35,16 +36,13 @@ class Payload:
 
     @property
     def next_station(self):
-        with open("sequence.json", "r") as file:
-            sequence_file = json.load(file)
-        sequence: list = sequence_file["Sequence"]
 
-        step = sequence.index(self._current_station.split('_')[0])
-        if step == len(sequence):
+        step = data.sequence.index(self._current_station.split('_')[0])
+        if step == len(data.sequence):
             step = step
         else:
             step = step + 1
-        return sequence[step]
+        return data.sequence[step]
 
     def robot_pickup(self):
         self.waiting = False

@@ -11,18 +11,14 @@ new_payload_id = 0
 robots = {1: Robot(1)}
 payloads = {}
 
-with open("sequence.json", "r") as file:
-    sequence_file = json.load(file)
-sequence = sequence_file["Sequence"]
-
 
 def create_payload(p_id, time):
     payloads[p_id]: Payload = Payload(create=time,
                                       payload_id=p_id,
-                                      current_station=sequence[0]+"_0")
+                                      current_station=data.sequence[0]+"_0")
     logging.log("Payload Created with ID > " + str(p_id))
 
-    data.stations[sequence[0]+"_0"].stock.append(payloads[p_id])
+    data.stations[data.sequence[0]+"_0"].stock.append(payloads[p_id])
 
 
 new_payload_id = new_payload_id + 1
@@ -43,7 +39,7 @@ for sec in range(process_time):
         create_payload(new_payload_id, sec)
 
     for payload_id in list(payloads.keys()):
-        if payloads[payload_id].current_station.split('_')[0] == sequence[-1]:
+        if payloads[payload_id].current_station.split('_')[0] == data.sequence[-1]:
             logging.log(f"------------- PAYLOAD {payload_id} DONE AT {sec} -----------------")
             print(f"------------- PAYLOAD {payload_id} DONE AT {sec} -----------------")
             del payloads[payload_id]

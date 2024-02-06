@@ -4,8 +4,11 @@ from station import Station
 
 stations = {}
 
+
 with open("stations.json", "r") as file:
     station_file = json.load(file)
+
+sequence = list(station_file.keys())
 
 for station in station_file:
     process_input = True if "In" in station_file[station].keys() and station_file[station]["In"] else False
