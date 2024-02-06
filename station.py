@@ -10,12 +10,12 @@ class Station:
                  process_output: bool = False,
                  waiting: bool = True):
 
-        self._robot_release = False
         self._station_id = station_id
         self._process_time = 0
         self._stock = list()
         self._capacity = capacity
         self._robot_needed = robot
+        self._robot_release = not robot
         self._time = time
 
     @property
@@ -25,6 +25,10 @@ class Station:
     @stock.setter
     def stock(self, value):
         self._stock = value
+
+    @property
+    def station_id(self):
+        return self._station_id
 
     @property
     def available(self):
@@ -50,49 +54,12 @@ class Station:
 
     def run(self):
         if not self.available:
-            if self._time < self._process_time:
-                self._process_time = self._process_time + 1
-            else:
+            self._process_time = self._process_time + 1
+            if self._time > self._process_time:
+                pass
+            elif self._time == self._process_time:
                 self._robot_release = True
                 if not self._robot_needed:
                     for item in self._stock:
                         item.waiting = True
 
-
-
-
-"""
-    def run(self, time):
-        if not self.get_availability():
-            for payload in self.current_capacity:
-                if self.log[payload]["elapsed"] < self.process_time:
-                    self.log[payload]["elapsed"] = self.log[payload]["elapsed"] + 1
-                elif self.log[payload]["elapsed"] == self.process_time:
-                    if not self.robot_needed:
-                        data.payloads[payload].ready_to_pick_up()
-                    self.ready_to_pick = True
-                else:
-                    print("ERROR")
-
-    def get_availability(self):
-        
-
-    def release_robot(self):
-        return not self.robot_needed
-
-    def receive_payload(self, payload_id: int, time, robot_id: int):
-        self.ready_to_pick = False
-
-        self.current_capacity.append(payload_id)
-        self.log[payload_id] = {"payload": payload_id,
-                                "in_time": time,
-                                "elapsed": 0}
-        if self.robot_needed:
-            data.payloads[payload_id].drop_off(robot_id)
-        else:
-            data.payloads[payload_id].drop_off()
-
-    def send_out_payload(self, payload_id: int):
-        self.ready_to_pick = False
-        self.current_capacity.remove(payload_id)
-        data.payloads[payload_id].pick_up()"""

@@ -7,5 +7,5 @@ file = open(file_name, "w")
 def log(item):
     f = open(file_name, "a")
     f.write("\n" + item)
-    print(item)
+    # print(item)
     f.close()

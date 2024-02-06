@@ -39,7 +39,7 @@ class Payload:
             sequence_file = json.load(file)
         sequence: list = sequence_file["Sequence"]
 
-        step = sequence.index(self._current_station)
+        step = sequence.index(self._current_station.split('_')[0])
         if step == len(sequence):
             step = step
         else:
@@ -48,45 +48,5 @@ class Payload:
 
     def robot_pickup(self):
         self.waiting = False
-
-
-
-
-
-        """
-        
-        
-        
-
-        self.current_step = 0
-        self.completion = False
-        self.waiting = True
-        self.robot_hold = None
-
-    def get_id(self):
-        return self.payload_id
-
-    def get_step(self):
-        return self.current_step
-
-    def get_waiting(self):
-        return self.waiting
-
-    def pick_up(self):
-        self.waiting = False
-        self.robot_hold = None
-        logging.log(f"LOADER > Picked up: " + str(self.payload_id))
-
-    def drop_off(self, robot_id: int = None):
-        self.current_step = self.current_step + 1
-        if robot_id is None:
-            logging.log(f"LOADER > Dropped Off: " + str(self.payload_id))
-        else:
-            self.robot_hold = robot_id
-            logging.log(f"LOADER > Robot {str(robot_id)} Holding: {str(self.payload_id)}")
-
-    def ready_to_pick_up(self):
-        self.waiting = True
-        logging.log(f"LOADER > Ready for Pick up: " + str(self.payload_id))"""
 
 
