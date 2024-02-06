@@ -7,7 +7,7 @@
     "Capacity": 100000,
     "Stations": 1
   },
-  "Operation1": {
+  "Dip Coat": {
     "In/Out": false,
     "Time": 300,
     "Robot": false,
@@ -15,7 +15,7 @@
     "Capacity": 1,
     "Stations": 2
   },
-  "Operation2": {
+  "Dip Drip": {
     "In/Out": false,
     "Time": 300,
     "Robot": false,
@@ -23,7 +23,7 @@
     "Capacity": 1,
     "Stations": 2
   },
-  "Operation3": {
+  "Air Anneal": {
     "In/Out": false,
     "Time": 5880,
     "Robot": false,
@@ -31,7 +31,7 @@
     "Capacity": 2,
     "Stations": 2
   },
-  "Operation4": {
+  "Rinse": {
     "In/Out": false,
     "Time": 600,
     "Robot": false,
@@ -39,7 +39,7 @@
     "Capacity": 1,
     "Stations": 2
   },
-  "Operation5": {
+  "Rinse Dip": {
     "In/Out": false,
     "Time": 300,
     "Robot": false,
@@ -47,7 +47,7 @@
     "Capacity": 1,
     "Stations": 2
   },
-  "Operation6": {
+  "Vacuum Anneal": {
     "In/Out": false,
     "Time": 12840,
     "Robot": false,
