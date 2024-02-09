@@ -21,4 +21,5 @@ for station in station_file:
                                                         robot=station_file[station]["Robot"],
                                                         process_input=process_input,
                                                         process_output=process_output,
-                                                        waiting=station_file[station]["Waiting"])
+                                                        waiting=station_file[station]["Waiting"],
+                                                        buffer=station_file[station]["Buffer"])

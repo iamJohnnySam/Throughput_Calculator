@@ -8,7 +8,8 @@ from payload import Payload
 class Station:
     def __init__(self, station_id, time, capacity: int = 1, robot: bool = False, process_input: bool = False,
                  process_output: bool = False,
-                 waiting: bool = True):
+                 waiting: bool = True,
+                 buffer=False):
 
         self._station_id = station_id
         self._process_time = 0
@@ -16,11 +17,17 @@ class Station:
         self._capacity = capacity
         self._robot_needed = robot
         self._robot_release = not robot
-        self._time = time
+        self._time = time * 60
+        self._buffer = buffer
+
 
     @property
     def stock(self):
         return self._stock
+
+    @property
+    def buffer(self):
+        return self._buffer
 
     @stock.setter
     def stock(self, value):

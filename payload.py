@@ -34,12 +34,18 @@ class Payload:
 
     @property
     def next_station(self):
-
         step = data.sequence.index(self._current_station.split('_')[0])
         if step == len(data.sequence):
             step = step
         else:
             step = step + 1
+
+        if data.stations[data.sequence[step]+"_0"].buffer:
+            for st in data.stations.keys():
+                if data.sequence[step+1] == data.stations[st].station_id and data.stations[st].available:
+                    step = step + 1
+                    break
+
         return data.sequence[step]
 
     def robot_pickup(self):

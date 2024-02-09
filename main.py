@@ -9,6 +9,8 @@ process_time = 22 * 60 * 60
 input_every = 12840 / 4
 new_payload_id = 0
 robots = {1: Robot(1)}
+# robots = {1: Robot(1),
+#           2: Robot(2)}
 payloads = {}
 
 
