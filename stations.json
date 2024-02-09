@@ -14,7 +14,7 @@
     "Robot": false,
     "Waiting": false,
     "Capacity": 1,
-    "Stations": 2,
+    "Stations": 1,
     "Buffer": false
   },
   "Air Buffer": {
@@ -41,7 +41,7 @@
     "Robot": false,
     "Waiting": false,
     "Capacity": 1,
-    "Stations": 2,
+    "Stations": 1,
     "Buffer": false
   },
   "Vac Buffer": {
