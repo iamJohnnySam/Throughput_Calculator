@@ -17,6 +17,15 @@
     "Stations": 2,
     "Buffer": false
   },
+  "Air Buffer": {
+    "In/Out": false,
+    "Time": 1,
+    "Robot": false,
+    "Waiting": false,
+    "Capacity": 1,
+    "Stations": 1,
+    "Buffer": true
+  },
   "Air Anneal": {
     "In/Out": false,
     "Time": 55,
@@ -35,7 +44,7 @@
     "Stations": 2,
     "Buffer": false
   },
-  "Buffer": {
+  "Vac Buffer": {
     "In/Out": false,
     "Time": 1,
     "Robot": false,
