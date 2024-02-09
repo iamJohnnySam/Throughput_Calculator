@@ -18,16 +18,11 @@ class Station:
         self._robot_needed = robot
         self._robot_release = not robot
         self._time = time * 60
-        self._buffer = buffer
-
+        self.buffer = buffer
 
     @property
     def stock(self):
         return self._stock
-
-    @property
-    def buffer(self):
-        return self._buffer
 
     @stock.setter
     def stock(self, value):
@@ -69,4 +64,3 @@ class Station:
                 if not self._robot_needed:
                     for item in self._stock:
                         item.waiting = True
-

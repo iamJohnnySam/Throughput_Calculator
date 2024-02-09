@@ -1,6 +1,6 @@
 from datetime import datetime
 
-file_name = datetime.now().strftime("%Y%m%d%H%M%S") + ".txt"
+file_name = "log/"+datetime.now().strftime("%Y%m%d%H%M%S") + ".txt"
 file = open(file_name, "w")
 
 
