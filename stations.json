@@ -19,7 +19,7 @@
   },
   "Air Buffer": {
     "In/Out": false,
-    "Time": 1,
+    "Time": 0,
     "Robot": false,
     "Waiting": false,
     "Capacity": 1,
@@ -46,11 +46,11 @@
   },
   "Vac Buffer": {
     "In/Out": false,
-    "Time": 1,
+    "Time": 0,
     "Robot": false,
     "Waiting": false,
     "Capacity": 1,
-    "Stations": 1,
+    "Stations": 2,
     "Buffer": true
   },
   "Vacuum Anneal": {

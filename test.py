@@ -1,4 +1,4 @@
-import tkinter as tk
+
 import time
 
 
@@ -92,7 +92,4 @@ class Simulator:
                 self.move_payload(payload, station, self.stations[-1])
 
 
-root = tk.Tk()
-simulator = Simulator(root)
-tk.Button(root, text="Start Simulation", command=simulator.simulate).pack()
-root.mainloop()
+

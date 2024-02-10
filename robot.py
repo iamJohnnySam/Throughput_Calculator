@@ -1,3 +1,5 @@
+import tkinter as tk
+
 import data
 import logging
 from payload import Payload
@@ -5,6 +7,8 @@ from payload import Payload
 
 class Robot:
     def __init__(self, robot_id):
+        self._gui_payloads = None
+        self._gui = None
         self.next_station = ""
         self._robot_id = robot_id
 
@@ -33,13 +37,24 @@ class Robot:
     def available(self):
         return len(self.stock) < self._capacity
 
+    @property
+    def gui(self):
+        return self._gui
+
+    @gui.setter
+    def gui(self, gui_ob):
+        self._gui = gui_ob
+        self._gui_payloads = tk.Label(self._gui)
+        self._gui_payloads.pack()
+
     def pick(self, payload: Payload, next_station):
         payload.robot_pickup()
         self._stock.append(payload)
         self._current_time = 0
         self._get_action = True
         self._put_action = False
-        self.next_station=next_station
+        self.next_station = next_station
+        self.update_gui_payloads()
 
     def place(self, payload: Payload, next_station: str):
         logging.log(f"ROBOT {self._robot_id} PLACE INITIATED FOR PAYLOAD {payload.payload_id} TO {next_station}")
@@ -49,6 +64,13 @@ class Robot:
         self._get_action = False
         self._put_action = True
         payload.current_station = next_station
+        self.update_gui_payloads()
+
+    def update_gui_payloads(self):
+        show_string = "- PAYLOADS -"
+        for payload in self._stock:
+            show_string = show_string + "\nPAYLOAD " + str(payload.payload_id)
+        self._gui_payloads["text"] = show_string
 
     def run(self):
         if self._get_action:
