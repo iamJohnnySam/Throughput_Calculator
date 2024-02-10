@@ -6,15 +6,19 @@ from payload import Payload
 
 
 class Station:
-    def __init__(self, station_id, time, capacity: int = 1, robot: bool = False, process_input: bool = False,
-                 process_output: bool = False,
-                 waiting: bool = True,
-                 buffer=False):
+    def __init__(self, station_id, time,
+                 capacity: int = 1,
+                 robot: bool = False,
+                 buffer: bool = False,
+                 attached_station: str = ""):
 
+        self._gui_block = None
         self._station_id = station_id
+        self._attached_station = attached_station
 
         self._process_time = 0
         self._gui_process_time = None
+        self._blocked = False
 
         self._stock = list()
         self._capacity = capacity
@@ -36,6 +40,15 @@ class Station:
     def stock(self):
         return self._stock
 
+    @property
+    def blocked(self):
+        return self._blocked
+
+    @blocked.setter
+    def blocked(self, val):
+        self._blocked = val
+        self.update_gui_payloads()
+
     @stock.setter
     def stock(self, value):
         self._stock = value
@@ -46,7 +59,8 @@ class Station:
 
     @property
     def available(self):
-        return len(self.stock) < self._capacity
+        stock = len(self.stock) < self._capacity
+        return stock and not self._blocked
 
     @property
     def robot_needed(self):
@@ -66,21 +80,31 @@ class Station:
         tk.Label(self._gui, text=self.station_id).pack()
         tk.Label(self._gui).pack()
 
+        if self._attached_station == "":
+            att = "No"
+        else:
+            att = self._attached_station
+
         process_frame = tk.Frame(self._gui)
         process_frame.pack()
-        tk.Label(process_frame, text='Time =').grid(row=0)
+        tk.Label(process_frame, text='Attached =').grid(row=0)
+        tk.Label(process_frame, text=att).grid(row=0, column=1)
+        tk.Label(process_frame, text='Time =').grid(row=1)
         self._gui_process_time = tk.Label(process_frame, text=self._process_time)
-        self._gui_process_time.grid(row=0, column=1)
-        tk.Label(process_frame, text='Capacity =').grid(row=1)
+        self._gui_process_time.grid(row=1, column=1)
+        tk.Label(process_frame, text='Capacity =').grid(row=2)
         self._gui_capacity = tk.Label(process_frame, text=str(len(self.stock)))
-        self._gui_capacity.grid(row=1, column=1)
-        tk.Label(self._gui).pack()
-        tk.Label(process_frame, text='Waiting =').grid(row=2)
+        self._gui_capacity.grid(row=2, column=1)
+        tk.Label(process_frame, text='Waiting =').grid(row=3)
         self._gui_wait_time = tk.Label(process_frame, text="Pending")
-        self._gui_wait_time.grid(row=2, column=1)
+        self._gui_wait_time.grid(row=3, column=1)
+        tk.Label(process_frame, text='Blocked =').grid(row=4)
+        self._gui_block = tk.Label(process_frame, text="False")
+        self._gui_block.grid(row=4, column=1)
+
         tk.Label(self._gui).pack()
 
-        self._gui_payloads = tk.Label(self._gui)
+        self._gui_payloads = tk.Label(self._gui, height="10", anchor="n")
         self._gui_payloads.pack()
         tk.Label(self._gui).pack()
 
@@ -94,6 +118,9 @@ class Station:
         logging.log(f"{self._station_id} REMOVED {payload.payload_id}")
         self.update_gui_payloads()
 
+        if self._attached_station != "" and len(self._stock) == 0:
+            data.stations[self._attached_station].blocked = False
+
     def robot_place(self, payload: Payload):
         self._wait_start = True
         self._stock.append(payload)
@@ -101,17 +128,29 @@ class Station:
         logging.log(f"{self._station_id} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
 
+        if self._attached_station != "" and len(self._stock) > 0:
+            data.stations[self._attached_station].blocked = True
+
     def update_gui_payloads(self):
-        show_string = "- PAYLOADS -"
-        for payload in self._stock:
+        if len(self._stock) == 0:
+            show_string = "STATION\nEMPTY"
+        else:
+            show_string = "- PAYLOADS -"
+        for payload in reversed(self._stock):
             show_string = show_string + "\nPAYLOAD " + str(payload.payload_id)
         self._gui_payloads["text"] = show_string
         self._gui_capacity["text"] = str(len(self._stock))
+        self._gui_block["text"] = str(self._blocked)
 
     def run(self):
-        if not self.available:
+        if not self.available and not self._blocked:
             self._process_time = self._process_time + 1
             self._gui_process_time["text"] = self._process_time
+
+            if self._process_time >= self._time:
+                self._gui_process_time["fg"] = 'red'
+            else:
+                self._gui_process_time["fg"] = 'black'
 
             if self._time == self._process_time:
                 self._robot_release = True
