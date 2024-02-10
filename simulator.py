@@ -46,8 +46,8 @@ class Simulator:
     def setup_simulation(self):
         for st in data.stations.keys():
             station = tk.Frame(self.stations_frame)
-            station.pack(side=tk.LEFT)
-            tk.Label(station, text=st, width=18).pack()
+            station.pack(side=tk.LEFT, anchor="n")
+            tk.Label(station, text=st, width=18, font='Helvetica 9 bold').pack()
             data.stations[st].gui = station
         tk.Label(self.canvas).pack()
 
@@ -55,8 +55,8 @@ class Simulator:
         robot_frame.pack()
         for rbt in robots.keys():
             robot_item = tk.Frame(robot_frame)
-            robot_item.pack()
-            tk.Label(robot_item, text="ROBOT " + str(rbt)).pack()
+            robot_item.pack(side=tk.LEFT, anchor="n")
+            tk.Label(robot_item, text="ROBOT " + str(rbt), font='Helvetica 9 bold').pack()
             robots[rbt].gui = robot_item
 
         tk.Label(self.canvas).pack()

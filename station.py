@@ -29,6 +29,8 @@ class Station:
         self._time = time * 60
         self._wait_start = False
         self._waiting_time = 0
+        self._gui_l_wait = None
+        self._l_wait = 0
         self.buffer = buffer
 
         self._gui = None
@@ -98,13 +100,16 @@ class Station:
         tk.Label(process_frame, text='Waiting =').grid(row=3)
         self._gui_wait_time = tk.Label(process_frame, text="Pending")
         self._gui_wait_time.grid(row=3, column=1)
-        tk.Label(process_frame, text='Blocked =').grid(row=4)
+        tk.Label(process_frame, text='Last_wait =').grid(row=4)
+        self._gui_l_wait = tk.Label(process_frame, text="Pending")
+        self._gui_l_wait.grid(row=4, column=1)
+        tk.Label(process_frame, text='Blocked =').grid(row=5)
         self._gui_block = tk.Label(process_frame, text="False")
-        self._gui_block.grid(row=4, column=1)
+        self._gui_block.grid(row=5, column=1)
 
         tk.Label(self._gui).pack()
 
-        self._gui_payloads = tk.Label(self._gui, height="10", anchor="n")
+        self._gui_payloads = tk.Frame(self._gui, height="10")
         self._gui_payloads.pack()
         tk.Label(self._gui).pack()
 
@@ -132,33 +137,35 @@ class Station:
             data.stations[self._attached_station].blocked = True
 
     def update_gui_payloads(self):
-        if len(self._stock) == 0:
-            show_string = "STATION\nEMPTY"
-        else:
-            show_string = "- PAYLOADS -"
-        for payload in reversed(self._stock):
-            show_string = show_string + "\nPAYLOAD " + str(payload.payload_id)
-        self._gui_payloads["text"] = show_string
+        for widget in self._gui_payloads.winfo_children():
+            widget.destroy()
+        for payload in self._stock:
+            tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id),
+                     fg="green" if payload.waiting else "black").pack()
         self._gui_capacity["text"] = str(len(self._stock))
         self._gui_block["text"] = str(self._blocked)
 
     def run(self):
-        if not self.available and not self._blocked:
-            self._process_time = self._process_time + 1
-            self._gui_process_time["text"] = self._process_time
+        cl = False
+        for payload in self._stock:
+            cl = cl or payload.waiting
 
-            if self._process_time >= self._time:
-                self._gui_process_time["fg"] = 'red'
-            else:
-                self._gui_process_time["fg"] = 'black'
+        if not self.available and not self._blocked and not cl:
+            self._l_wait = 0
+            self._process_time = self._process_time + 1
+            self._gui_process_time["text"] = self._time - self._process_time
+
+            self._gui_process_time["fg"] = 'red' if self._process_time >= self._time else 'black'
 
             if self._time == self._process_time:
                 self._robot_release = True
-                if not self._robot_needed:
-                    for item in self._stock:
-                        item.waiting = True
+                for item in self._stock:
+                    item.waiting = True
+                self.update_gui_payloads()
 
         else:
             if self._wait_start:
                 self._waiting_time = self._waiting_time + 1
                 self._gui_wait_time["text"] = str(self._waiting_time)
+                self._l_wait = self._l_wait + 1
+                self._gui_l_wait["text"] = str(self._l_wait)

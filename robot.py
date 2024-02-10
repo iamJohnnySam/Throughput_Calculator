@@ -46,7 +46,7 @@ class Robot:
     @gui.setter
     def gui(self, gui_ob):
         self._gui = gui_ob
-        self._gui_payloads = tk.Label(self._gui, height="2")
+        self._gui_payloads = tk.Frame(self._gui)
         self._gui_payloads.pack()
 
         tk.Label(self._gui).pack()
@@ -81,14 +81,11 @@ class Robot:
         self.update_gui_payloads()
 
     def update_gui_payloads(self):
-        if len(self._stock) == 0:
-            show_string = "END EFFECTOR\nEMPTY"
-        else:
-            show_string = "- PAYLOADS -"
+        for widget in self._gui_payloads.winfo_children():
+            widget.destroy()
         for payload in self._stock:
-            show_string = show_string + "\nPAYLOAD " + str(payload.payload_id)
-        self._gui_payloads["text"] = show_string
-        self._gui_process_time["text"] = self._transfer_time
+            tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id)).pack()
+        self._gui_process_time["text"] = self._current_time
 
     def run(self):
         if self._get_action:
