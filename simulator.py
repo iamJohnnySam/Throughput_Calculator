@@ -5,20 +5,25 @@ import logging
 from payload import Payload
 from robot import Robot
 
-input_every = 12840 / 4
+new_payload_id = 0
+input_every = 1000
 robots = {1: Robot(1)}
 # robots = {1: Robot(1),
 #           2: Robot(2)}
 payloads = {}
 
 
-def create_payload(p_id, time):
-    payloads[p_id]: Payload = Payload(create=time,
-                                      payload_id=p_id,
-                                      current_station=data.sequence[0] + "_0")
-    logging.log("Payload Created with ID > " + str(p_id))
+def create_payload(time):
+    global new_payload_id
 
-    data.stations[data.sequence[0] + "_0"].stock.append(payloads[p_id])
+    if len(data.stations[data.sequence[0] + "_0"].stock) < 2:
+        new_payload_id = new_payload_id + 1
+        payloads[new_payload_id]: Payload = Payload(create=time,
+                                                    payload_id=new_payload_id,
+                                                    current_station=data.sequence[0] + "_0")
+        logging.log("Payload Created with ID > " + str(new_payload_id))
+
+        data.stations[data.sequence[0] + "_0"].stock.append(payloads[new_payload_id])
 
 
 class Simulator:
@@ -28,7 +33,6 @@ class Simulator:
         self.canvas = tk.Canvas(master, width=500, height=500)
         self.canvas.pack()
 
-        self.new_payload_id = 0
         self.process_time = 22 * 60 * 60
         self.elapsed_time = 0
 
@@ -52,9 +56,8 @@ class Simulator:
         for rbt in robots.keys():
             robot_item = tk.Frame(robot_frame)
             robot_item.pack()
-            tk.Label(robot_item, text="ROBOT "+str(rbt)).pack()
+            tk.Label(robot_item, text="ROBOT " + str(rbt)).pack()
             robots[rbt].gui = robot_item
-
 
         buttons_frame = tk.Frame(self.canvas)
         buttons_frame.pack()
@@ -73,33 +76,21 @@ class Simulator:
         self.simulate(15)
 
     def simulate_1h(self):
-        self.simulate(60*60)
+        self.simulate(60 * 60)
 
     def simulate_remaining(self):
         self.simulate(self.process_time - self.elapsed_time)
 
     def simulate(self, run_time: int):
         for sec in range(run_time):
-            logging.log(f"\nTime = {sec}")
+            logging.log(f"\nTime = {self.elapsed_time}")
 
-            if self.elapsed_time == 0:
-                self.new_payload_id = self.new_payload_id + 1
-                create_payload(self.new_payload_id, 0)
-                self.new_payload_id = self.new_payload_id + 1
-                create_payload(self.new_payload_id, 0)
-                self.new_payload_id = self.new_payload_id + 1
-                create_payload(self.new_payload_id, 0)
-                self.new_payload_id = self.new_payload_id + 1
-                create_payload(self.new_payload_id, 0)
-
-            if sec % input_every == 0:
-                self.new_payload_id = self.new_payload_id + 1
-                create_payload(self.new_payload_id, sec)
+            create_payload(self.elapsed_time)
 
             for payload_id in list(payloads.keys()):
                 if payloads[payload_id].current_station.split('_')[0] == data.sequence[-1]:
-                    logging.log(f"------------- PAYLOAD {payload_id} DONE AT {sec} -----------------")
-                    print(f"------------- PAYLOAD {payload_id} DONE AT {sec} -----------------")
+                    logging.log(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
+                    print(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
                     del payloads[payload_id]
                     continue
 
@@ -131,4 +122,4 @@ class Simulator:
 
             self.elapsed_time = self.elapsed_time + 1
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.elapsed_time)}sec\t"
-                                              f"{str(self.elapsed_time/3600)}hours")
+                                              f"{str(self.elapsed_time / 3600)}hours")

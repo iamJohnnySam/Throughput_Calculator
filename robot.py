@@ -96,3 +96,5 @@ class Robot:
                 self._put_action = False
                 data.stations[self.stock[0].current_station].robot_place(self.stock[0])
                 self._stock.remove(self.stock[0])
+
+        self.update_gui_payloads()

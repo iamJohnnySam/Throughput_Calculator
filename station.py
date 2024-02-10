@@ -23,10 +23,13 @@ class Station:
         self._robot_needed = robot
         self._robot_release = not robot
         self._time = time * 60
+        self._wait_start = False
+        self._waiting_time = 0
         self.buffer = buffer
 
         self._gui = None
         self._gui_payloads = None
+        self._gui_wait_time = None
         self.robot_frame = None
 
     @property
@@ -72,6 +75,10 @@ class Station:
         self._gui_capacity = tk.Label(process_frame, text=str(len(self.stock)))
         self._gui_capacity.grid(row=1, column=1)
         tk.Label(self._gui).pack()
+        tk.Label(process_frame, text='Waiting =').grid(row=2)
+        self._gui_wait_time = tk.Label(process_frame, text="Pending")
+        self._gui_wait_time.grid(row=2, column=1)
+        tk.Label(self._gui).pack()
 
         self._gui_payloads = tk.Label(self._gui)
         self._gui_payloads.pack()
@@ -88,6 +95,7 @@ class Station:
         self.update_gui_payloads()
 
     def robot_place(self, payload: Payload):
+        self._wait_start = True
         self._stock.append(payload)
         self._robot_release = False if self._robot_needed else True
         logging.log(f"{self._station_id} RECEIVED {payload.payload_id}")
@@ -104,10 +112,14 @@ class Station:
         if not self.available:
             self._process_time = self._process_time + 1
             self._gui_process_time["text"] = self._process_time
-            if self._time > self._process_time:
-                pass
-            elif self._time == self._process_time:
+
+            if self._time == self._process_time:
                 self._robot_release = True
                 if not self._robot_needed:
                     for item in self._stock:
                         item.waiting = True
+
+        else:
+            if self._wait_start:
+                self._waiting_time = self._waiting_time + 1
+                self._gui_wait_time["text"] = str(self._waiting_time)
