@@ -3,73 +3,82 @@
     "In": true,
     "Time": 0,
     "Robot": false,
-    "Waiting": true,
     "Capacity": 100000,
     "Stations": 1,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
   },
   "Dip Coat": {
     "In/Out": false,
-    "Time": 10,
+    "Time": 5,
     "Robot": false,
-    "Waiting": false,
     "Capacity": 1,
     "Stations": 1,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
   },
-  "Air Buffer": {
+  "Dip Drip": {
     "In/Out": false,
-    "Time": 1,
+    "Time": 5,
     "Robot": false,
-    "Waiting": false,
     "Capacity": 1,
     "Stations": 1,
-    "Buffer": true
+    "Buffer": false,
+    "Attached": "Dip Coat"
   },
   "Air Anneal": {
     "In/Out": false,
     "Time": 55,
     "Robot": false,
-    "Waiting": true,
     "Capacity": 2,
     "Stations": 2,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
   },
   "Rinse": {
     "In/Out": false,
-    "Time": 15,
+    "Time": 5,
     "Robot": false,
-    "Waiting": false,
     "Capacity": 1,
     "Stations": 1,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
+  },
+  "Rinse Drip": {
+    "In/Out": false,
+    "Time": 10,
+    "Robot": false,
+    "Capacity": 1,
+    "Stations": 1,
+    "Buffer": false,
+    "Attached": "Rinse"
   },
   "Vac Buffer": {
     "In/Out": false,
     "Time": 1,
     "Robot": false,
-    "Waiting": false,
     "Capacity": 1,
-    "Stations": 2,
-    "Buffer": true
+    "Stations": 1,
+    "Buffer": true,
+    "Attached": ""
   },
   "Vacuum Anneal": {
     "In/Out": false,
     "Time": 100,
     "Robot": false,
-    "Waiting": true,
     "Capacity": 2,
     "Stations": 2,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
   },
   "Unloading": {
     "Out": true,
     "Time": 0,
     "Robot": false,
-    "Waiting": true,
     "Capacity": 100000,
     "Stations": 1,
-    "Buffer": false
+    "Buffer": false,
+    "Attached": ""
 
   }
 }

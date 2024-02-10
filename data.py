@@ -15,11 +15,13 @@ for station in station_file:
     process_output = True if "Out" in station_file[station].keys() and station_file[station]["Out"] else False
 
     for qty in range(station_file[station]["Stations"]):
+        if station_file[station]['Attached'] != "":
+            att = f"{station_file[station]['Attached']}_{str(qty)}"
+        else:
+            att = ""
         stations[f"{station}_{qty}"]: Station = Station(station_id=station,
                                                         time=station_file[station]["Time"],
                                                         capacity=station_file[station]["Capacity"],
                                                         robot=station_file[station]["Robot"],
-                                                        process_input=process_input,
-                                                        process_output=process_output,
-                                                        waiting=station_file[station]["Waiting"],
-                                                        buffer=station_file[station]["Buffer"])
+                                                        buffer=station_file[station]["Buffer"],
+                                                        attached_station=att)

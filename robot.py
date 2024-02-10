@@ -7,6 +7,8 @@ from payload import Payload
 
 class Robot:
     def __init__(self, robot_id):
+        self._gui_process_time = None
+        self._gui_location = None
         self._gui_payloads = None
         self._gui = None
         self.next_station = ""
@@ -44,8 +46,20 @@ class Robot:
     @gui.setter
     def gui(self, gui_ob):
         self._gui = gui_ob
-        self._gui_payloads = tk.Label(self._gui)
+        self._gui_payloads = tk.Label(self._gui, height="2")
         self._gui_payloads.pack()
+
+        tk.Label(self._gui).pack()
+
+        pr = tk.Frame(self._gui)
+        pr.pack()
+
+        tk.Label(pr, text='Time =').grid(row=0)
+        self._gui_process_time = tk.Label(pr, text=self._transfer_time)
+        self._gui_process_time.grid(row=0, column=1)
+        tk.Label(pr, text='Location =').grid(row=1)
+        self._gui_location = tk.Label(pr, text="Unknown")
+        self._gui_location.grid(row=1, column=1)
 
     def pick(self, payload: Payload, next_station):
         payload.robot_pickup()
@@ -67,10 +81,14 @@ class Robot:
         self.update_gui_payloads()
 
     def update_gui_payloads(self):
-        show_string = "- PAYLOADS -"
+        if len(self._stock) == 0:
+            show_string = "END EFFECTOR\nEMPTY"
+        else:
+            show_string = "- PAYLOADS -"
         for payload in self._stock:
             show_string = show_string + "\nPAYLOAD " + str(payload.payload_id)
         self._gui_payloads["text"] = show_string
+        self._gui_process_time["text"] = self._transfer_time
 
     def run(self):
         if self._get_action:
@@ -83,6 +101,7 @@ class Robot:
             if self._current_time == self._transfer_time:
                 logging.log(f"ROBOT {self._robot_id} > PAYLOAD {self.stock[0].payload_id} "
                             f"AT {self.stock[0].current_station}")
+                self._gui_location["text"] = self.stock[0].current_station
                 data.stations[self.stock[0].current_station].robot_pickup(self.stock[0])
 
             self._current_time = self._current_time + 1
@@ -93,6 +112,7 @@ class Robot:
             else:
                 logging.log(f"ROBOT {self._robot_id} > PLACE ARRIVE {self.stock[0].payload_id} "
                             f"AT {self.stock[0].current_station}")
+                self._gui_location["text"] = self.stock[0].current_station
                 self._put_action = False
                 data.stations[self.stock[0].current_station].robot_place(self.stock[0])
                 self._stock.remove(self.stock[0])

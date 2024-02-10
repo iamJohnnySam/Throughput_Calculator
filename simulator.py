@@ -59,6 +59,8 @@ class Simulator:
             tk.Label(robot_item, text="ROBOT " + str(rbt)).pack()
             robots[rbt].gui = robot_item
 
+        tk.Label(self.canvas).pack()
+
         buttons_frame = tk.Frame(self.canvas)
         buttons_frame.pack()
         tk.Label(self.canvas).pack()
@@ -66,6 +68,7 @@ class Simulator:
         self._gui_elapsed_time.pack()
         tk.Button(buttons_frame, text="Simulate 15sec", command=self.simulate_15s).pack(side=tk.LEFT)
         tk.Button(buttons_frame, text="Simulate 30sec", command=self.simulate_30s).pack(side=tk.LEFT)
+        tk.Button(buttons_frame, text="Simulate 30min", command=self.simulate_30m).pack(side=tk.LEFT)
         tk.Button(buttons_frame, text="Simulate 1hour", command=self.simulate_1h).pack(side=tk.LEFT)
         tk.Button(buttons_frame, text="Complete Simulation", command=self.simulate_remaining).pack(side=tk.LEFT)
 
@@ -73,7 +76,10 @@ class Simulator:
         self.simulate(15)
 
     def simulate_30s(self):
-        self.simulate(15)
+        self.simulate(30)
+
+    def simulate_30m(self):
+        self.simulate(30 * 60)
 
     def simulate_1h(self):
         self.simulate(60 * 60)
