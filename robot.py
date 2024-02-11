@@ -85,7 +85,7 @@ class Robot:
             widget.destroy()
         for payload in self._stock:
             tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id)).pack()
-        self._gui_process_time["text"] = self._current_time
+        self._gui_process_time["text"] = self._transfer_time - self._current_time
 
     def run(self):
         if self._get_action:

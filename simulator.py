@@ -28,9 +28,12 @@ def create_payload(time):
 
 class Simulator:
     def __init__(self, master, grid_size=10):
+        self.run_time_button = None
+        self.run_time_entry = None
         self.master = master
         self.grid_size = grid_size
-        self.canvas = tk.Canvas(master, width=500, height=500)
+        self.canvas = tk.Canvas(master, width=500, height=1000)
+        master.title("ROBOT LAYOUT SIMULATOR")
         self.canvas.pack()
 
         self.process_time = 22 * 60 * 60
@@ -70,7 +73,24 @@ class Simulator:
         tk.Button(buttons_frame, text="Simulate 30sec", command=self.simulate_30s).pack(side=tk.LEFT)
         tk.Button(buttons_frame, text="Simulate 30min", command=self.simulate_30m).pack(side=tk.LEFT)
         tk.Button(buttons_frame, text="Simulate 1hour", command=self.simulate_1h).pack(side=tk.LEFT)
-        tk.Button(buttons_frame, text="Complete Simulation", command=self.simulate_remaining).pack(side=tk.LEFT)
+        tk.Label(buttons_frame, width=5).pack(side=tk.LEFT)
+        v_cmd = buttons_frame.register(self.validate_input)
+        self.run_time_entry = tk.Entry(buttons_frame, width=5, validate="key", validatecommand=(v_cmd, '%d', '%P'))
+        self.run_time_entry.pack(side=tk.LEFT)
+        self.run_time_button = tk.Button(buttons_frame, text="Simulate 10s", command=self.simulate_x)
+        self.run_time_button.pack(side=tk.LEFT)
+        self.run_time_entry.insert(0, "10")
+        tk.Button(buttons_frame, text="Complete Simulation", command=self.simulate_remaining).pack()
+
+    def validate_input(self, action, value_if_allowed):
+        if action == '1':  # insert
+            if value_if_allowed.isdigit():
+                self.run_time_button["text"] = f"Simulate {value_if_allowed}s"
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def simulate_15s(self):
         self.simulate(15)
@@ -83,6 +103,9 @@ class Simulator:
 
     def simulate_1h(self):
         self.simulate(60 * 60)
+
+    def simulate_x(self):
+        self.simulate(int(self.run_time_entry.get()))
 
     def simulate_remaining(self):
         self.simulate(self.process_time - self.elapsed_time)

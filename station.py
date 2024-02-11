@@ -113,10 +113,6 @@ class Station:
         self._gui_payloads.pack()
         tk.Label(self._gui).pack()
 
-        self.robot_frame = tk.Frame(self._gui)
-        self.robot_frame.pack()
-        tk.Label(self._gui).pack()
-
     def robot_pickup(self, payload: Payload):
         self._stock.remove(payload)
         self._process_time = 0
@@ -139,9 +135,13 @@ class Station:
     def update_gui_payloads(self):
         for widget in self._gui_payloads.winfo_children():
             widget.destroy()
-        for payload in self._stock:
+        i = 0
+        for payload in reversed(self._stock):
+            i = i + 1
             tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id),
                      fg="green" if payload.waiting else "black").pack()
+            if i >= 10:
+                break
         self._gui_capacity["text"] = str(len(self._stock))
         self._gui_block["text"] = str(self._blocked)
 
