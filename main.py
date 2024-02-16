@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from simulator import Simulator
+from gui import Simulator
 
 root = tk.Tk()
 simulator = Simulator(root)

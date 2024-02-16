@@ -1,19 +1,15 @@
-import data
 import logging
 
 
 class Payload:
     def __init__(self, create: int, payload_id: int, current_station: str):
-        self._create_time = create
-        self._payload_id = payload_id
+        self.create_time = create
+        self.payload_id = payload_id
 
         self._waiting = True
 
         self._current_station = current_station
-
-    @property
-    def payload_id(self):
-        return self._payload_id
+        self.visited_stations = []
 
     @property
     def waiting(self):
@@ -22,7 +18,7 @@ class Payload:
     @waiting.setter
     def waiting(self, val: bool):
         self._waiting = val
-        logging.log(f"PAYLOAD {self._payload_id} WAITING = {val}")
+        logging.log(f"PAYLOAD {self.payload_id} WAITING = {val}")
 
     @property
     def current_station(self):
@@ -31,24 +27,7 @@ class Payload:
     @current_station.setter
     def current_station(self, station: str):
         self._current_station = station
-
-    @property
-    def next_station(self):
-        step = data.sequence.index(self._current_station.split('_')[0])
-        if step == len(data.sequence):
-            step = step
-        else:
-            step = step + 1
-
-        if data.stations[data.sequence[step]+"_0"].buffer:
-            for st in data.stations.keys():
-                if data.sequence[step+1] == data.stations[st].station_id and data.stations[st].available:
-                    step = step + 1
-                    break
-
-        return data.sequence[step]
+        self.visited_stations.append(station)
 
     def robot_pickup(self):
         self.waiting = False
-
-

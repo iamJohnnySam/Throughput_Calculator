@@ -1,0 +1,97 @@
+{
+  "Wet Robot": {
+    "type": "robot",
+    "area": "wet",
+    "count": 1,
+    "get_time": 15,
+    "put_time": 15
+  },
+  "Dry Robot": {
+    "type": "robot",
+    "area": "dry",
+    "count": 1,
+    "get_time": 15,
+    "put_time": 15
+  },
+  "Loading": {
+    "type": "station",
+    "area": "wet",
+    "time": 0,
+    "capacity": 100000,
+    "count": 1,
+    "buffer": false,
+    "attach": ""
+  },
+  "Station 1": {
+    "type": "station",
+    "area": "wet",
+    "time": 5,
+    "capacity": 2,
+    "count": 1,
+    "buffer": false,
+    "attach": ""
+  },
+  "Sta 1 Ext": {
+    "type": "station",
+    "area": "wet",
+    "time": 5,
+    "capacity": 1,
+    "count": 1,
+    "buffer": false,
+    "attach": "Station 1"
+  },
+  "Station 2": {
+    "type": "station",
+    "area": "dry",
+    "time": 55,
+    "capacity": 2,
+    "count": 2,
+    "buffer": false,
+    "attach": ""
+  },
+  "Station 3": {
+    "type": "station",
+    "area": "wet",
+    "time": 5,
+    "capacity": 1,
+    "count": 1,
+    "buffer": false,
+    "attach": ""
+  },
+  "Sta 3 Att": {
+    "type": "station",
+    "area": "wet",
+    "time": 10,
+    "capacity": 1,
+    "count": 1,
+    "buffer": false,
+    "attach": "Station 3"
+  },
+  "buffer": {
+    "type": "station",
+    "area": "dry",
+    "time": 1,
+    "capacity": 1,
+    "count": 1,
+    "buffer": true,
+    "attach": ""
+  },
+  "Station 4": {
+    "type": "station",
+    "area": "dry",
+    "time": 100,
+    "capacity": 2,
+    "count": 2,
+    "buffer": false,
+    "attach": ""
+  },
+  "Unloading": {
+    "type": "station",
+    "area": "dry",
+    "time": 0,
+    "capacity": 100000,
+    "count": 1,
+    "buffer": false,
+    "attach": ""
+  }
+}

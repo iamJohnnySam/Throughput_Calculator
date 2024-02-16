@@ -1,11 +1,29 @@
-from datetime import datetime
+import os
 
-file_name = "log/"+datetime.now().strftime("%Y%m%d%H%M%S") + ".txt"
-file = open(file_name, "w")
+path = ""
+
+
+def prepare_log_file(log_file):
+    global path
+
+    if ".json" in log_file:
+        log_file = log_file.replace(".json", "")
+
+    if log_file == "":
+        return
+
+    path = "log/" + log_file + ".txt"
+
+    if not os.path.isfile(path):
+        file = open(path, "w")
+    else:
+        os.remove(path)
 
 
 def log(item):
-    f = open(file_name, "a")
+    global path
+
+    f = open(path, "a")
     f.write("\n" + item)
     # print(item)
     f.close()
