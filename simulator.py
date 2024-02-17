@@ -183,6 +183,7 @@ class Simulation:
                                                                   current_station=first_station)
             logging.log("Payload Created with ID > " + str(self.new_payload_id))
             self.stations[first_station].stock.append(self.payloads[self.new_payload_id])
+            self.stations[first_station].update_gui_payloads()
 
     def is_a_station_available(self, process) -> bool:
         for st in self.stations.keys():
