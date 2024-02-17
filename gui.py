@@ -37,27 +37,28 @@ class Simulator:
         self._gui_elapsed_time = tk.Label(controls_frame, text="SELECT A LAYOUT")
         self._gui_elapsed_time.pack()
 
+        btn_gap = 2
         self.btn_01sc = tk.Button(controls_frame, text="Simulate 1 sec", command=self.simulate_1s, state=tk.DISABLED)
-        self.btn_01sc.pack(side=tk.LEFT)
+        self.btn_01sc.pack(side=tk.LEFT, padx=btn_gap)
         self.btn_15sc = tk.Button(controls_frame, text="Simulate 15sec", command=self.simulate_15s, state=tk.DISABLED)
-        self.btn_15sc.pack(side=tk.LEFT)
+        self.btn_15sc.pack(side=tk.LEFT, padx=btn_gap)
         self.btn_30sc = tk.Button(controls_frame, text="Simulate 30sec", command=self.simulate_30s, state=tk.DISABLED)
-        self.btn_30sc.pack(side=tk.LEFT)
+        self.btn_30sc.pack(side=tk.LEFT, padx=btn_gap)
         self.btn_30mn = tk.Button(controls_frame, text="Simulate 30min", command=self.simulate_30m, state=tk.DISABLED)
-        self.btn_30mn.pack(side=tk.LEFT)
+        self.btn_30mn.pack(side=tk.LEFT, padx=btn_gap)
         self.btn_01hr = tk.Button(controls_frame, text="Simulate 1hour", command=self.simulate_1h, state=tk.DISABLED)
-        self.btn_01hr.pack(side=tk.LEFT)
+        self.btn_01hr.pack(side=tk.LEFT, padx=btn_gap)
 
-        tk.Label(controls_frame, width=5).pack(side=tk.LEFT)
+        tk.Label(controls_frame, width=btn_gap).pack(side=tk.LEFT)
         v_cmd = controls_frame.register(self.validate_input)
         self.run_time_entry = tk.Entry(controls_frame, width=5, validate="key", validatecommand=(v_cmd, '%d', '%P'))
         self.run_time_entry.pack(side=tk.LEFT)
         self.btn_x_sc = tk.Button(controls_frame, text="Simulate 10s", command=self.simulate_x, state=tk.DISABLED)
-        self.btn_x_sc.pack(side=tk.LEFT)
+        self.btn_x_sc.pack(side=tk.LEFT, padx=btn_gap)
         self.run_time_entry.insert(0, "10")
         self.btn_22fn = tk.Button(controls_frame, text="Complete 22h", command=self.simulate_remaining,
                                   state=tk.DISABLED)
-        self.btn_22fn.pack()
+        self.btn_22fn.pack(side=tk.LEFT, padx=btn_gap)
         tk.Label(master).pack()
 
         # SEQUENCE FRAME
@@ -104,12 +105,12 @@ class Simulator:
 
     def updated_sim_time(self):
         if self.sim.deadlocked:
-            self._gui_elapsed_time["text"] = f"SIMULATION DEADLOCKED"
-            self._gui_elapsed_time["fg"] = 'red'
+            self._gui_elapsed_time["text"] = f"STATIONS REACHED DEADLOCK CONDITION AT {str(self.sim.elapsed_time)} SEC"
+            self._gui_elapsed_time["fg"] = 'black'
+            self._gui_elapsed_time["bg"] = 'red'
         else:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
-            self._gui_elapsed_time["fg"] = 'black'
 
     def simulate_1s(self):
         self.sim.simulate(1)

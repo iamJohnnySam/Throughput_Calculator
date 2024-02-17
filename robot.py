@@ -55,15 +55,15 @@ class Robot:
     def gui(self, gui_ob):
         self._gui = gui_ob
         tk.Label(self._gui, text=self.robot_name).pack()
-        tk.Label(self._gui).pack()
+        tk.Label(self._gui).pack(padx=4)
 
         self._gui_payloads = tk.Frame(self._gui)
-        self._gui_payloads.pack()
+        self._gui_payloads.pack(padx=4)
 
-        tk.Label(self._gui).pack()
+        tk.Label(self._gui).pack(padx=4)
 
         pr = tk.Frame(self._gui)
-        pr.pack()
+        pr.pack(padx=4)
 
         tk.Label(pr, text='Time =').grid(row=0)
         self._gui_process_time = tk.Label(pr, text=self._transfer_time)
@@ -78,6 +78,7 @@ class Robot:
 
         payload.robot_pickup()
         self._stock.append(payload)
+        next_station.robot_block(self)
         self._get_action = True
         self._put_action = False
 
@@ -122,6 +123,7 @@ class Robot:
                         f"AT {self.next_station.raw_name}")
             self._put_action = False
             self._gui_location["text"] = self.stock[0].current_station
+            self.next_station.robot_block(self, unblock=True)
             self.next_station.robot_place(self.stock[0])
             self._stock.remove(self.stock[0])
 

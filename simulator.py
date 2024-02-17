@@ -38,29 +38,30 @@ class Simulation:
     def setup_simulation(self, sequence_frame, layout_frame, robot_frame):
         x = 0
         y = 0
+        max_widgets = 8
         for st in self.stations.keys():
-            if y > 9:
+            if y > max_widgets:
                 x = x + 1
                 y = 0
-            station = tk.Frame(layout_frame)
-            station.grid(row=x, column=y)
+            station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
+            station.grid(row=x, column=y, padx=1, pady=2)
             y = y + 1
             tk.Label(station, text=st, width=18, font='Helvetica 9 bold').pack()
             self.stations[st].gui = station
 
         for ts in self.transfers.keys():
-            if y > 9:
+            if y > max_widgets:
                 x = x + 1
                 y = 0
-            station = tk.Frame(layout_frame)
-            station.grid(row=x, column=y)
+            station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
+            station.grid(row=x, column=y, padx=1, pady=2)
             y = y + 1
             tk.Label(station, text=ts, width=18, font='Helvetica 9 bold').pack()
             self.transfers[ts].gui = station
 
         for rbt in self.robots.keys():
-            robot_item = tk.Frame(robot_frame)
-            robot_item.pack(side=tk.LEFT, anchor="n")
+            robot_item = tk.Frame(robot_frame, highlightthickness=1, highlightbackground="black")
+            robot_item.pack(side=tk.LEFT, anchor="n", padx=1, pady=2)
             tk.Label(robot_item, text=str(rbt), font='Helvetica 9 bold').pack()
             self.robots[rbt].gui = robot_item
 
@@ -159,16 +160,15 @@ class Simulation:
 
         for station in self.stations:
             if self.stations[station].process == process:
-                best_station = station if best_station is None else station
-
                 if not check_availability:
                     return station
-
                 else:
                     if self.stations[station].available:
                         if optimize_area:
                             if self.stations[station].area == area:
                                 return station
+                            else:
+                                best_station = station if best_station is None else best_station
                         else:
                             return station
         return best_station
@@ -221,6 +221,9 @@ class Simulation:
                                         check_availability=True,
                                         optimize_area=True, area=current_area)
 
+        if next_station is None:
+            return ""
+
         next_area: str = self.stations[next_station].area
 
         if not (current_area.endswith(next_area) or next_area.startswith(current_area)):
@@ -230,7 +233,11 @@ class Simulation:
 
     def delete_completed_payloads(self):
         for payload_id in list(self.payloads.keys()):
-            if self.payloads[payload_id].current_station.split('_')[0] == self.sequence[-1]:
+            try:
+                current_process = self.stations[self.payloads[payload_id].current_station].process
+            except KeyError:
+                continue
+            if current_process == self.sequence[-1]:
                 logging.log(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
                 print(f"PAYLOAD {payload_id} DONE AT {self.elapsed_time} ({self.elapsed_time / 3600})")
                 del self.payloads[payload_id]
@@ -254,6 +261,8 @@ class Simulation:
             # IF PAYLOAD WAITING
             if payload.waiting:
                 next_station = self.get_next_station(self.payloads[payload_id])
+                if next_station == "":
+                    continue
                 try:
                     current_station: Station = self.stations[payload.current_station]
                 except KeyError:

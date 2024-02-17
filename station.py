@@ -74,22 +74,22 @@ class Station:
         return self._gui
 
     @gui.setter
-    def gui(self, gui_ob:tk.Frame):
+    def gui(self, gui_ob: tk.Frame):
         self._gui = gui_ob
-        tk.Label(self._gui, text=self.process).pack()
+        tk.Label(self._gui, text=self.process).pack(padx=4)
 
         # Time Frame
         time_frame = tk.Frame(self._gui)
-        time_frame.pack()
+        time_frame.pack(padx=4)
         self._gui_process_time = tk.Button(time_frame,
                                            text="time: " + str(self._process_time),
                                            width=18,
                                            command=self.toggle_process_parameters)
-        self._gui_process_time.pack()
+        self._gui_process_time.pack(padx=4)
 
         # Process Items Frame
         self.process_frame = ttk.Frame(self._gui)
-        self.process_frame.pack()
+        self.process_frame.pack(padx=4)
         self._gui_capacity = tk.Label(self.process_frame, text=str(len(self.stock)))
         self._gui_wait_time = tk.Label(self.process_frame, text="Pending")
         self._gui_l_wait = tk.Label(self.process_frame, text="Pending")
@@ -98,8 +98,8 @@ class Station:
         tk.Label(self.process_frame, text="Hidden").grid(row=0, column=1)
 
         self._gui_payloads = tk.Frame(self._gui, height="10")
-        self._gui_payloads.pack()
-        tk.Label(self._gui).pack()
+        self._gui_payloads.pack(padx=4)
+        tk.Label(self._gui).pack(padx=4)
 
     def toggle_process_parameters(self):
         if self.process_visible:
@@ -149,14 +149,24 @@ class Station:
         if self.attached_station is not None and len(self._stock) > 0:
             self.attached_station.blocked = True
 
+    def robot_block(self, robot, unblock=False):
+        if unblock:
+            self._stock.remove(robot)
+        else:
+            self._stock.append(robot)
+        self.update_gui_payloads()
+
     def update_gui_payloads(self):
         for widget in self._gui_payloads.winfo_children():
             widget.destroy()
         i = 0
         for payload in reversed(self._stock):
             i = i + 1
-            tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id),
-                     fg="green" if payload.waiting else "black").pack()
+            if type(payload) is not Payload:
+                tk.Label(self._gui_payloads, text=str(payload.robot_name), fg="blue").pack()
+            else:
+                tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id),
+                         fg="green" if payload.waiting else "black").pack()
             if i >= 10:
                 break
         self._gui_capacity["text"] = str(len(self._stock))
@@ -164,10 +174,14 @@ class Station:
 
     def run(self):
         cl = False
+        no_robots = True
         for payload in self._stock:
+            if type(payload) is not Payload:
+                no_robots = False
+                continue
             cl = cl or payload.waiting
 
-        if not self.available and not self._blocked and not cl:
+        if not self.available and no_robots and not self._blocked and not cl:
             self._l_wait = 0
             self._process_time = self._process_time + 1
             self._gui_process_time["text"] = "time: " + str(self._time - self._process_time)
