@@ -60,6 +60,11 @@ class Simulator:
         self.btn_22fn.pack()
         tk.Label(master).pack()
 
+        # SEQUENCE FRAME
+        self.sequence_frame = tk.Frame(master)
+        self.sequence_frame.pack()
+        tk.Label().pack()
+
         # LAYOUT FRAME
         self.layout_frame = tk.Frame(master)
         self.layout_frame.pack()
@@ -84,7 +89,7 @@ class Simulator:
         self.btn_x_sc["state"] = tk.ACTIVE
         self.btn_22fn["state"] = tk.ACTIVE
 
-        self.sim = Simulation(self.selected_layout.get(), self.layout_frame, self.robot_frame)
+        self.sim = Simulation(self.selected_layout.get(), self.sequence_frame, self.layout_frame, self.robot_frame)
 
 
     def validate_input(self, action, value_if_allowed):
@@ -97,37 +102,40 @@ class Simulator:
         else:
             return True
 
+    def updated_sim_time(self):
+        if self.sim.deadlocked:
+            self._gui_elapsed_time["text"] = f"SIMULATION DEADLOCKED"
+            self._gui_elapsed_time["fg"] = 'red'
+        else:
+            self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
+                                              f"{str(self.sim.elapsed_time / 3600)}hours")
+            self._gui_elapsed_time["fg"] = 'black'
+
     def simulate_1s(self):
         self.sim.simulate(1)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
+
 
     def simulate_15s(self):
         self.sim.simulate(15)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
 
     def simulate_30s(self):
         self.sim.simulate(30)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
 
     def simulate_30m(self):
         self.sim.simulate(30 * 60)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
 
     def simulate_1h(self):
         self.sim.simulate(60 * 60)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
 
     def simulate_x(self):
         self.sim.simulate(int(self.run_time_entry.get()))
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()
 
     def simulate_remaining(self):
         self.sim.simulate((22 * 60 * 60) - self.sim.elapsed_time)
-        self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
-                                          f"{str(self.sim.elapsed_time / 3600)}hours")
+        self.updated_sim_time()

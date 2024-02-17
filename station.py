@@ -1,18 +1,19 @@
 import tkinter as tk
+from tkinter import ttk
 
 import logging
 from payload import Payload
 
 
 class Station:
-    def __init__(self, station_id,
-                 station_raw, station_type, time: int = 1,
+    def __init__(self, process,
+                 station_raw, station_type,
+                 time: int = 1,
                  area: str = "",
                  capacity: int = 1,
                  buffer: bool = False):
 
-        self._gui_block = None
-        self._station_id = station_id
+        self._process = process
         self.attached_station = None
         self.area = area
         self.type = station_type
@@ -33,10 +34,14 @@ class Station:
         self._l_wait = 0
         self.buffer = buffer
 
+        self.process_visible = False
+
         self._gui = None
         self._gui_payloads = None
         self._gui_wait_time = None
         self.robot_frame = None
+        self.process_frame = None
+        self._gui_block = None
 
     @property
     def stock(self):
@@ -56,8 +61,8 @@ class Station:
         self._stock = value
 
     @property
-    def station_id(self):
-        return self._station_id
+    def process(self):
+        return self._process
 
     @property
     def available(self):
@@ -69,48 +74,67 @@ class Station:
         return self._gui
 
     @gui.setter
-    def gui(self, gui_ob):
+    def gui(self, gui_ob:tk.Frame):
         self._gui = gui_ob
-        tk.Label(self._gui, text=self.station_id).pack()
-        tk.Label(self._gui).pack()
+        tk.Label(self._gui, text=self.process).pack()
 
-        if self.attached_station is None:
-            att = "No"
-        else:
-            att = self.attached_station.raw_name
+        # Time Frame
+        time_frame = tk.Frame(self._gui)
+        time_frame.pack()
+        self._gui_process_time = tk.Button(time_frame,
+                                           text="time: " + str(self._process_time),
+                                           width=18,
+                                           command=self.toggle_process_parameters)
+        self._gui_process_time.pack()
 
-        process_frame = tk.Frame(self._gui)
-        process_frame.pack()
-        tk.Label(process_frame, text='Area =').grid(row=0)
-        tk.Label(process_frame, text=self.area).grid(row=0, column=1)
-        tk.Label(process_frame, text='Attached =').grid(row=1)
-        tk.Label(process_frame, text=att).grid(row=1, column=1)
-        tk.Label(process_frame, text='Time =').grid(row=2)
-        self._gui_process_time = tk.Label(process_frame, text=self._process_time)
-        self._gui_process_time.grid(row=2, column=1)
-        tk.Label(process_frame, text='Capacity =').grid(row=3)
-        self._gui_capacity = tk.Label(process_frame, text=str(len(self.stock)))
-        self._gui_capacity.grid(row=3, column=1)
-        tk.Label(process_frame, text='Waiting =').grid(row=4)
-        self._gui_wait_time = tk.Label(process_frame, text="Pending")
-        self._gui_wait_time.grid(row=4, column=1)
-        tk.Label(process_frame, text='Last_wait =').grid(row=5)
-        self._gui_l_wait = tk.Label(process_frame, text="Pending")
-        self._gui_l_wait.grid(row=5, column=1)
-        tk.Label(process_frame, text='Blocked =').grid(row=6)
-        self._gui_block = tk.Label(process_frame, text="False")
-        self._gui_block.grid(row=6, column=1)
-
-        tk.Label(self._gui).pack()
+        # Process Items Frame
+        self.process_frame = ttk.Frame(self._gui)
+        self.process_frame.pack()
+        self._gui_capacity = tk.Label(self.process_frame, text=str(len(self.stock)))
+        self._gui_wait_time = tk.Label(self.process_frame, text="Pending")
+        self._gui_l_wait = tk.Label(self.process_frame, text="Pending")
+        self._gui_block = tk.Label(self.process_frame, text="False")
+        tk.Label(self.process_frame, text="Details").grid(row=0, column=0)
+        tk.Label(self.process_frame, text="Hidden").grid(row=0, column=1)
 
         self._gui_payloads = tk.Frame(self._gui, height="10")
         self._gui_payloads.pack()
         tk.Label(self._gui).pack()
 
+    def toggle_process_parameters(self):
+        if self.process_visible:
+            self.process_visible = False
+            for widget in self.process_frame.winfo_children():
+                widget.grid_forget()
+            tk.Label(self.process_frame, text="Details").grid(row=0, column=0)
+            tk.Label(self.process_frame, text="Hidden").grid(row=0, column=1)
+
+        else:
+            self.process_visible = True
+            for widget in self.process_frame.winfo_children():
+                widget.grid_forget()
+            self.fill_process_frame()
+
+    def fill_process_frame(self):
+        att = "No" if self.attached_station is None else self.attached_station.raw_name
+
+        tk.Label(self.process_frame, text='Area =').grid(row=0)
+        tk.Label(self.process_frame, text=self.area).grid(row=0, column=1)
+        tk.Label(self.process_frame, text='Attached =').grid(row=1)
+        tk.Label(self.process_frame, text=att).grid(row=1, column=1)
+        tk.Label(self.process_frame, text='Capacity =').grid(row=3)
+        self._gui_capacity.grid(row=3, column=1)
+        tk.Label(self.process_frame, text='Waiting =').grid(row=4)
+        self._gui_wait_time.grid(row=4, column=1)
+        tk.Label(self.process_frame, text='Last_wait =').grid(row=5)
+        self._gui_l_wait.grid(row=5, column=1)
+        tk.Label(self.process_frame, text='Blocked =').grid(row=6)
+        self._gui_block.grid(row=6, column=1)
+
     def robot_pickup(self, payload: Payload):
         self._stock.remove(payload)
         self._process_time = 0
-        logging.log(f"{self._station_id} REMOVED {payload.payload_id}")
+        logging.log(f"{self._process} REMOVED {payload.payload_id}")
         self.update_gui_payloads()
 
         if self.attached_station is not None and len(self._stock) == 0:
@@ -119,7 +143,7 @@ class Station:
     def robot_place(self, payload: Payload):
         self._wait_start = True
         self._stock.append(payload)
-        logging.log(f"{self._station_id} RECEIVED {payload.payload_id}")
+        logging.log(f"{self._process} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
 
         if self.attached_station is not None and len(self._stock) > 0:
@@ -146,7 +170,7 @@ class Station:
         if not self.available and not self._blocked and not cl:
             self._l_wait = 0
             self._process_time = self._process_time + 1
-            self._gui_process_time["text"] = self._time - self._process_time
+            self._gui_process_time["text"] = "time: " + str(self._time - self._process_time)
 
             self._gui_process_time["fg"] = 'red' if self._process_time >= self._time else 'black'
 

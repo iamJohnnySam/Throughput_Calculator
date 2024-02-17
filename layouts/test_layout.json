@@ -15,6 +15,7 @@
   },
   "Loading": {
     "type": "station",
+    "process": "loading",
     "area": "wet",
     "time": 0,
     "capacity": 100000,
@@ -24,6 +25,7 @@
   },
   "Station 1": {
     "type": "station",
+    "process": "process1",
     "area": "wet",
     "time": 5,
     "capacity": 2,
@@ -33,15 +35,17 @@
   },
   "Sta 1 Ext": {
     "type": "station",
+    "process": "process2",
     "area": "wet",
     "time": 5,
-    "capacity": 1,
+    "capacity": 2,
     "count": 1,
     "buffer": false,
     "attach": "Station 1"
   },
   "Station 2": {
     "type": "station",
+    "process": "process3",
     "area": "dry",
     "time": 55,
     "capacity": 2,
@@ -51,6 +55,7 @@
   },
   "Station 3": {
     "type": "station",
+    "process": "process4",
     "area": "wet",
     "time": 5,
     "capacity": 1,
@@ -60,6 +65,7 @@
   },
   "Sta 3 Att": {
     "type": "station",
+    "process": "process5",
     "area": "wet",
     "time": 10,
     "capacity": 1,
@@ -69,6 +75,7 @@
   },
   "buffer": {
     "type": "station",
+    "process": "buffer",
     "area": "dry",
     "time": 1,
     "capacity": 1,
@@ -78,6 +85,7 @@
   },
   "Station 4": {
     "type": "station",
+    "process": "process6",
     "area": "dry",
     "time": 100,
     "capacity": 2,
@@ -87,6 +95,7 @@
   },
   "Unloading": {
     "type": "station",
+    "process": "unloading",
     "area": "dry",
     "time": 0,
     "capacity": 100000,

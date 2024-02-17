@@ -10,7 +10,7 @@ from station import Station
 
 
 class Simulation:
-    def __init__(self, layout_name: str, layout_frame: tk.Frame, robot_frame: tk.Frame):
+    def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame):
         logging.prepare_log_file(layout_name)
 
         # Sequence
@@ -23,6 +23,7 @@ class Simulation:
         self.robots = {}
         self.transfers = {}
         self.create_hardware(station_file)
+        self.last_created_process = "Null"
 
         # Payload objects
         self.new_payload_id = 0
@@ -30,9 +31,11 @@ class Simulation:
 
         # Simulation Variables
         self.elapsed_time = 0
-        self.setup_simulation(layout_frame, robot_frame)
+        self.setup_simulation(sequence_frame, layout_frame, robot_frame)
+        self._last_all_waiting = False
+        self.deadlocked = False
 
-    def setup_simulation(self, layout_frame, robot_frame):
+    def setup_simulation(self, sequence_frame, layout_frame, robot_frame):
         x = 0
         y = 0
         for st in self.stations.keys():
@@ -60,6 +63,15 @@ class Simulation:
             robot_item.pack(side=tk.LEFT, anchor="n")
             tk.Label(robot_item, text=str(rbt), font='Helvetica 9 bold').pack()
             self.robots[rbt].gui = robot_item
+
+        sequence = ""
+        for seq in self.sequence:
+            if sequence == "":
+                sequence += seq
+            else:
+                sequence += f" > {seq}"
+
+        tk.Label(sequence_frame, text=sequence).pack()
 
     def create_hardware(self, station_file: dict):
         transfer = {}
@@ -90,16 +102,20 @@ class Simulation:
                                                      put_time=hw_data['put_time'])
 
     def create_station(self, hw_name: str, num: int, hw_data: dict):
-        att = f"{hw_data['attach']}_{str(num)}" if hw_data['attach'] != "" else ""
-        self.stations[f'{hw_name}_{str(num)}'] = Station(station_id=hw_name,
+        process = hw_data['process']
+        if hw_data['buffer']:
+            process = f'Buffer | {self.last_created_process}'
+
+        self.stations[f'{hw_name}_{str(num)}'] = Station(process=process,
                                                          station_raw=f'{hw_name}_{str(num)}',
                                                          station_type=hw_data['type'],
                                                          time=hw_data['time'],
                                                          capacity=hw_data['capacity'],
                                                          buffer=hw_data['buffer'],
                                                          area=hw_data['area'])
-        if hw_name not in self.sequence:
-            self.sequence.append(hw_name)
+        self.last_created_process = process
+        if process not in self.sequence:
+            self.sequence.append(process)
 
     def attach_station(self, hw_name: str, num: int, hw_data: dict):
         if hw_data['attach'] == "":
@@ -115,66 +131,100 @@ class Simulation:
                 areas.append(self.robots[robot].area)
 
         pairs = int(len(areas) * (len(areas) - 1) / 2)
-        combinations = list(itertools.combinations(areas, 2))
+        combs = list(itertools.combinations(areas, 2))
 
+        num = 0
         for ts in range(pairs):
-            self.transfers[f'TRANSFER_{str(ts)}'] = Station(station_id="TRANSFER",
-                                                            station_raw=f'TRANSFER_{str(ts)}',
-                                                            station_type='transfer',
-                                                            time=1,
-                                                            area=combinations[ts][0] + "," + combinations[ts][1])
+            self.transfers[f'TRANSFER_{str(num)}'] = Station(process=f"{combs[ts][0]} > {combs[ts][1]}",
+                                                             station_raw=f'TRANSFER_{str(num)}',
+                                                             station_type='transfer',
+                                                             time=1,
+                                                             area=combs[ts][0] + "," + combs[ts][1])
+            num += 1
+            self.transfers[f'TRANSFER_{str(num)}'] = Station(process=f"{combs[ts][1]} > {combs[ts][0]}",
+                                                             station_raw=f'TRANSFER_{str(num)}',
+                                                             station_type='transfer',
+                                                             time=1,
+                                                             area=combs[ts][1] + "," + combs[ts][0])
+            num += 1
+
+    def get_station(self, process, check_availability=False, optimize_area=False, area=""):
+        if optimize_area and area == "":
+            raise AttributeError("Missing area for optimization")
+
+        if optimize_area:
+            check_availability = True
+
+        best_station = None
+
+        for station in self.stations:
+            if self.stations[station].process == process:
+                best_station = station if best_station is None else station
+
+                if not check_availability:
+                    return station
+
+                else:
+                    if self.stations[station].available:
+                        if optimize_area:
+                            if self.stations[station].area == area:
+                                return station
+                        else:
+                            return station
+        return best_station
 
     def create_payload(self, time):
-        if len(self.stations[self.sequence[0] + "_0"].stock) < 2:
+        first_station = self.get_station(self.sequence[0])
+
+        if len(self.stations[first_station].stock) < 2:
             self.new_payload_id = self.new_payload_id + 1
             self.payloads[self.new_payload_id]: Payload = Payload(create=time,
                                                                   payload_id=self.new_payload_id,
-                                                                  current_station=self.sequence[0] + "_0")
+                                                                  current_station=first_station)
             logging.log("Payload Created with ID > " + str(self.new_payload_id))
+            self.stations[first_station].stock.append(self.payloads[self.new_payload_id])
 
-            self.stations[self.sequence[0] + "_0"].stock.append(self.payloads[self.new_payload_id])
-
-    def is_station_available(self, station) -> bool:
+    def is_a_station_available(self, process) -> bool:
         for st in self.stations.keys():
-            if station == self.stations[st].station_id and self.stations[st].available:
+            if process == self.stations[st].process and self.stations[st].available:
                 return True
         return False
 
-    def get_transfer(self, area1, area2):
+    def get_transfer(self, next_area, current_area):
         for tr in self.transfers.keys():
-            if area1 in self.transfers[tr].area.split(",") and area2 in self.transfers[tr].area.split(","):
+            if self.transfers[tr].area.startswith(current_area) and self.transfers[tr].area.endswith(next_area):
                 return tr
         raise KeyError("Couldn't find appropriate transfer station")
 
     def get_next_station(self, payload: Payload):
-        last_station = self.sequence[0]
+        last_process = self.sequence[0]
         for seq in self.sequence:
             for visit in payload.visited_stations:
-                if seq == visit.split('_')[0]:
-                    last_station = seq
+                if visit in self.stations.keys() and seq == self.stations[visit].process:
+                    last_process = seq
 
-        step = self.sequence.index(last_station)
+        step = self.sequence.index(last_process)
         step = step if step == len(self.sequence) else step + 1
 
-        if self.stations[self.sequence[step] + "_0"].buffer:
-            skip_station = self.sequence[step + 1]
-            if self.is_station_available(skip_station):
+        if self.stations[self.get_station(self.sequence[step])].buffer:
+            skip_process = self.sequence[step + 1]
+            if self.is_a_station_available(skip_process):
                 step = step + 1
 
-        next_station = self.sequence[step]
-
         try:
-            area1 = self.stations[next_station + "_0"].area
+            current_area: str = self.stations[payload.current_station].area
         except KeyError:
-            area1 = self.transfers[next_station + "_0"].area
+            current_area: str = self.transfers[payload.current_station].area.split(",")[1]
 
-        try:
-            area2 = self.stations[payload.current_station].area
-        except KeyError:
-            area2 = self.transfers[payload.current_station].area
+        next_process = self.sequence[step]
+        next_station = self.get_station(next_process,
+                                        check_availability=True,
+                                        optimize_area=True, area=current_area)
 
-        if not (area1 in area2.split(",") or area2 in area1.split(",")):
-            next_station = self.get_transfer(area1, area2)
+        next_area: str = self.stations[next_station].area
+
+        if not (current_area.endswith(next_area) or next_area.startswith(current_area)):
+            next_station = self.get_transfer(next_area, current_area)
 
         return next_station
 
@@ -187,6 +237,8 @@ class Simulation:
 
     def simulate(self, run_time: int):
         for sec in range(run_time):
+            if self.deadlocked:
+                return
             logging.log(f"\nTime = {self.elapsed_time}")
             self.create_payload(self.elapsed_time)
             self.move_payloads()
@@ -195,8 +247,10 @@ class Simulation:
             self.elapsed_time = self.elapsed_time + 1
 
     def move_payloads(self):
+        all_waiting = True
         for payload_id in list(self.payloads.keys()):
             payload = self.payloads[payload_id]
+
             # IF PAYLOAD WAITING
             if payload.waiting:
                 next_station = self.get_next_station(self.payloads[payload_id])
@@ -209,7 +263,7 @@ class Simulation:
                 transfer_started = False
                 for st in self.stations.keys():
                     station = self.stations[st]
-                    if station.available and next_station == station.station_id and not transfer_started:
+                    if station.available and next_station == station.raw_name and not transfer_started:
                         transfer_started = self.try_for_pick(payload, current_station, station)
 
                 for ts in self.transfers.keys():
@@ -217,21 +271,28 @@ class Simulation:
                     if station.available and next_station == station.raw_name and not transfer_started:
                         transfer_started = self.try_for_pick(payload, current_station, station, True)
 
-    def try_for_pick(self, payload, current_station, station, transfer=False):
+            else:
+                all_waiting = False
+
+        if all_waiting:
+            self.deadlocked = True if (all_waiting and self._last_all_waiting) else False
+            self._last_all_waiting = True
+        else:
+            self._last_all_waiting = False
+
+    def try_for_pick(self, payload, current_station: Station, next_station: Station, transfer=False):
         for rbt in self.robots:
             robot = self.robots[rbt]
 
             if transfer:
                 area_match = True if robot.area == current_station.area else False
-                print(robot.area)
-                print(current_station.area)
             else:
-                area_match = True if robot.area == station.area else False
+                area_match = True if robot.area == next_station.area else False
 
             if robot.available and area_match:
                 robot.pick(payload=payload,
                            current_station=current_station,
-                           next_station=station)
+                           next_station=next_station)
                 return True
         return False
 

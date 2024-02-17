@@ -75,13 +75,19 @@ class Robot:
     def pick(self, payload: Payload, current_station: Station, next_station: Station):
         logging.log(f"ROBOT {self._robot_id} > PICK PAYLOAD {payload.payload_id} FROM {current_station.raw_name}.")
         self.next_station = next_station
-        self.current_station = current_station
 
         payload.robot_pickup()
         self._stock.append(payload)
-        self._current_time = 0
         self._get_action = True
         self._put_action = False
+
+        if self.current_station is not None and self.current_station.raw_name == self.next_station.raw_name:
+            self._current_time = self._get_time
+        else:
+            self._current_time = 0
+
+        self.current_station = current_station
+
         self._transfer_time = self._get_time
         self.update_gui_payloads()
 
@@ -89,9 +95,9 @@ class Robot:
         logging.log(f"ROBOT {self._robot_id} PLACE PAYLOAD {payload.payload_id} TO {self.next_station}")
         # self.current_station.robot_pickup(payload)
         payload.robot_pickup()
-        self._current_time = 0
         self._get_action = False
         self._put_action = True
+        self._current_time = 0
         self._transfer_time = self._put_time
         payload.current_station = self.next_station.raw_name
         self.update_gui_payloads()
