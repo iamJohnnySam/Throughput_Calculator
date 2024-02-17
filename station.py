@@ -167,7 +167,7 @@ class Station:
             else:
                 tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id),
                          fg="green" if payload.waiting else "black").pack()
-            if i >= 10:
+            if i >= 4:
                 break
         self._gui_capacity["text"] = str(len(self._stock))
         self._gui_block["text"] = str(self._blocked)

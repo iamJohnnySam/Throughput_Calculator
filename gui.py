@@ -111,6 +111,7 @@ class Simulator:
         else:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
+        # self._gui_elapsed_time.update()
 
     def simulate_1s(self):
         self.sim.simulate(1)
