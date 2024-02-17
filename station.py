@@ -18,6 +18,7 @@ class Station:
         self.area = area
         self.type = station_type
         self.raw_name = station_raw
+        self.complete = False
 
         self._process_time = 0
         self._gui_process_time = None
@@ -99,7 +100,6 @@ class Station:
 
         self._gui_payloads = tk.Frame(self._gui, height="10")
         self._gui_payloads.pack(padx=4)
-        tk.Label(self._gui).pack(padx=4)
 
     def toggle_process_parameters(self):
         if self.process_visible:
@@ -142,6 +142,8 @@ class Station:
 
     def robot_place(self, payload: Payload):
         self._wait_start = True
+        self.complete = False
+        self._process_time = 0
         self._stock.append(payload)
         logging.log(f"{self._process} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
@@ -173,22 +175,23 @@ class Station:
         self._gui_block["text"] = str(self._blocked)
 
     def run(self):
-        cl = False
+        contain_waiting_payload = False
         no_robots = True
         for payload in self._stock:
             if type(payload) is not Payload:
                 no_robots = False
                 continue
-            cl = cl or payload.waiting
+            contain_waiting_payload = contain_waiting_payload or payload.waiting
 
-        if not self.available and no_robots and not self._blocked and not cl:
+        if not self.available and no_robots and not self._blocked and not contain_waiting_payload and not self.complete:
             self._l_wait = 0
             self._process_time = self._process_time + 1
-            self._gui_process_time["text"] = "time: " + str(self._time - self._process_time)
 
+            self._gui_process_time["text"] = "time: " + str(self._time - self._process_time)
             self._gui_process_time["fg"] = 'red' if self._process_time >= self._time else 'black'
 
-            if self._time == self._process_time:
+            if self._time <= self._process_time:
+                self.complete = True
                 for item in self._stock:
                     item.waiting = True
                 self.update_gui_payloads()
@@ -199,3 +202,4 @@ class Station:
                 self._gui_wait_time["text"] = str(self._waiting_time)
                 self._l_wait = self._l_wait + 1
                 self._gui_l_wait["text"] = str(self._l_wait)
+

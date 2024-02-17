@@ -44,7 +44,7 @@ class Simulation:
                 x = x + 1
                 y = 0
             station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
-            station.grid(row=x, column=y, padx=1, pady=2)
+            station.grid(row=x, column=y, padx=1, pady=2, sticky='n')
             y = y + 1
             tk.Label(station, text=st, width=18, font='Helvetica 9 bold').pack()
             self.stations[st].gui = station
@@ -54,7 +54,7 @@ class Simulation:
                 x = x + 1
                 y = 0
             station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
-            station.grid(row=x, column=y, padx=1, pady=2)
+            station.grid(row=x, column=y, padx=1, pady=2, sticky='n')
             y = y + 1
             tk.Label(station, text=ts, width=18, font='Helvetica 9 bold').pack()
             self.transfers[ts].gui = station
@@ -139,13 +139,13 @@ class Simulation:
             self.transfers[f'TRANSFER_{str(num)}'] = Station(process=f"{combs[ts][0]} > {combs[ts][1]}",
                                                              station_raw=f'TRANSFER_{str(num)}',
                                                              station_type='transfer',
-                                                             time=1,
+                                                             time=0,
                                                              area=combs[ts][0] + "," + combs[ts][1])
             num += 1
             self.transfers[f'TRANSFER_{str(num)}'] = Station(process=f"{combs[ts][1]} > {combs[ts][0]}",
                                                              station_raw=f'TRANSFER_{str(num)}',
                                                              station_type='transfer',
-                                                             time=1,
+                                                             time=0,
                                                              area=combs[ts][1] + "," + combs[ts][0])
             num += 1
 
@@ -244,6 +244,7 @@ class Simulation:
 
     def simulate(self, run_time: int):
         for sec in range(run_time):
+            self.elapsed_time = self.elapsed_time + 1
             if self.deadlocked:
                 return
             logging.log(f"\nTime = {self.elapsed_time}")
@@ -251,7 +252,6 @@ class Simulation:
             self.move_payloads()
             self.run_stations()
             self.delete_completed_payloads()
-            self.elapsed_time = self.elapsed_time + 1
 
     def move_payloads(self):
         all_waiting = True

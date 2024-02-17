@@ -83,7 +83,7 @@ class Robot:
         self._put_action = False
 
         if self.current_station is not None and self.current_station.raw_name == self.next_station.raw_name:
-            self._current_time = self._get_time
+            self._current_time = self._get_time-1
         else:
             self._current_time = 0
 
@@ -111,6 +111,8 @@ class Robot:
         self._gui_process_time["text"] = self._transfer_time - self._current_time
 
     def run(self):
+        self._current_time = self._current_time + 1
+
         if self._get_action and self._current_time == self._transfer_time:
             logging.log(f"ROBOT {self._robot_id} > PICK ARRIVE {self.stock[0].payload_id} "
                         f"AT {self.current_station.raw_name}")
@@ -126,7 +128,5 @@ class Robot:
             self.next_station.robot_block(self, unblock=True)
             self.next_station.robot_place(self.stock[0])
             self._stock.remove(self.stock[0])
-
-        self._current_time = self._current_time + 1
 
         self.update_gui_payloads()
