@@ -92,7 +92,6 @@ class Simulator:
 
         self.sim = Simulation(self.selected_layout.get(), self.sequence_frame, self.layout_frame, self.robot_frame)
 
-
     def validate_input(self, action, value_if_allowed):
         if action == '1':  # insert
             if value_if_allowed.isdigit():
@@ -116,7 +115,6 @@ class Simulator:
     def simulate_1s(self):
         self.sim.simulate(1)
         self.updated_sim_time()
-
 
     def simulate_15s(self):
         self.sim.simulate(15)

@@ -22,7 +22,7 @@ class Robot:
         self._get_action = False
         self._put_action = False
 
-        self._transfer_time = 15
+        self._transfer_time = get_time
         self._get_time = get_time
         self._put_time = put_time
 

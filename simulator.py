@@ -114,7 +114,9 @@ class Simulation:
                                                          capacity=hw_data['capacity'],
                                                          buffer=hw_data['buffer'],
                                                          area=hw_data['area'])
-        self.last_created_process = process
+        if not hw_data['buffer']:
+            self.last_created_process = process
+
         if process not in self.sequence:
             self.sequence.append(process)
 
@@ -195,7 +197,7 @@ class Simulation:
         for tr in self.transfers.keys():
             if self.transfers[tr].area.startswith(current_area) and self.transfers[tr].area.endswith(next_area):
                 return tr
-        raise KeyError("Couldn't find appropriate transfer station")
+        raise KeyError(f"Couldn't find appropriate transfer station")
 
     def get_next_station(self, payload: Payload):
         last_process = self.sequence[0]
