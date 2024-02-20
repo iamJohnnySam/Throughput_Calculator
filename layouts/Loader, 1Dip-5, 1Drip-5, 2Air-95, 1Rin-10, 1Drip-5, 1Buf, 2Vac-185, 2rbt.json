@@ -2,7 +2,7 @@
   "Robot": {
     "type": "robot",
     "area": "wet",
-    "count": 1,
+    "count": 2,
     "get_time": 15,
     "put_time": 15
   },
@@ -40,9 +40,9 @@
     "type": "station",
     "process": "air anneal",
     "area": "wet",
-    "time": 98,
-    "capacity": 2,
-    "count": 2,
+    "time": 95,
+    "capacity": 1,
+    "count": 4,
     "buffer": false,
     "attach": ""
   },
@@ -80,9 +80,9 @@
     "type": "station",
     "process": "vac anneal",
     "area": "wet",
-    "time": 214,
-    "capacity": 2,
-    "count": 2,
+    "time": 185,
+    "capacity": 1,
+    "count": 4,
     "buffer": false,
     "attach": ""
   },

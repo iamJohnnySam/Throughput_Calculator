@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from datetime import datetime
 
 from simulator import Simulation
 
@@ -24,9 +25,10 @@ class Simulator:
         self.selected_layout = tk.StringVar()
         self.layout_drop = tk.OptionMenu(layout_frame, self.selected_layout, *layout_options)
         self.layout_drop.config(width=75)
-        self.layout_drop.pack(side=tk.LEFT)
+        self.layout_drop.pack(side=tk.LEFT, padx=5)
         self.layout_button = tk.Button(layout_frame, text="Select Layout", command=self.layout_selected)
-        self.layout_button.pack(side=tk.LEFT)
+        self.layout_button.pack(side=tk.LEFT, padx=5)
+        tk.Button(layout_frame, text="Run all layouts", command=self.run_all_layouts).pack(side=tk.LEFT, padx=5)
         tk.Label(master).pack()
         layout_frame.pack()
         tk.Label(master).pack()
@@ -74,14 +76,32 @@ class Simulator:
         self.robot_frame = tk.Frame(master)
         self.robot_frame.pack()
 
-        self.sim = None
+        self.sim: Simulation = Simulation(os.listdir("layouts")[0],
+                                          self.sequence_frame, self.layout_frame, self.robot_frame)
 
-    def layout_selected(self):
-        if self.selected_layout.get() == "":
+    def run_all_layouts(self):
+        for layout in list(os.listdir("layouts")):
+            self.layout_selected(layout)
+            self.simulate_remaining()
+
+            self.record()
+
+    def layout_selected(self, layout=""):
+        if layout == "":
+            layout = self.selected_layout.get()
+
+        if layout == "":
             return
 
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
+        for widget in self.sequence_frame.winfo_children():
+            widget.destroy()
+
+        for widget in self.layout_frame.winfo_children():
+            widget.destroy()
+
+        for widget in self.robot_frame.winfo_children():
+            widget.destroy()
+
         self.btn_01sc["state"] = tk.ACTIVE
         self.btn_15sc["state"] = tk.ACTIVE
         self.btn_30sc["state"] = tk.ACTIVE
@@ -90,7 +110,12 @@ class Simulator:
         self.btn_x_sc["state"] = tk.ACTIVE
         self.btn_22fn["state"] = tk.ACTIVE
 
-        self.sim = Simulation(self.selected_layout.get(), self.sequence_frame, self.layout_frame, self.robot_frame)
+        lbl_selected_layout = tk.Label(self.sequence_frame, text="Layout : " + str(layout))
+        lbl_selected_layout.pack()
+        lbl_selected_layout.update()
+
+        self.sim = Simulation(layout, self.sequence_frame, self.layout_frame, self.robot_frame)
+        self.updated_sim_time()
 
     def validate_input(self, action, value_if_allowed):
         if action == '1':  # insert
@@ -113,29 +138,110 @@ class Simulator:
         # self._gui_elapsed_time.update()
 
     def simulate_1s(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(1)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_15s(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(15)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_30s(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(30)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_30m(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(30 * 60)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_1h(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(60 * 60)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_x(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate(int(self.run_time_entry.get()))
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
 
     def simulate_remaining(self):
+        self.layout_drop["state"] = "disabled"
+        self.layout_button["state"] = "disabled"
         self.sim.simulate((22 * 60 * 60) - self.sim.elapsed_time)
         self.updated_sim_time()
+        self.layout_drop["state"] = tk.NORMAL
+        self.layout_button["state"] = tk.NORMAL
+
+    def record(self):
+        path = "log/log.txt"
+        if not os.path.isfile(path):
+            file = open(path, "w")
+
+        station_details = ""
+        robot_details = ""
+        transfer_details = ""
+
+        for rbt in self.sim.robots:
+            robot = self.sim.robots[rbt]
+            val = (f"{robot.robot_name}\t"
+                   f"{robot.robot_id}\t"
+                   f"{robot.area}\t"
+                   f"{robot.get_time}\t"
+                   f"{robot.put_time}")
+            robot_details = robot_details + val + "\n"
+
+        for stat in self.sim.stations:
+            station = self.sim.stations[stat]
+            val = (f"{station.process}\t"
+                   f"{station.raw_name}\t"
+                   f"{station.type}\t"
+                   f"{station.run_time}\t"
+                   f"{station.max_capacity}\t"
+                   f"{station.buffer}\t"
+                   f"{station.area}")
+            station_details = station_details + val + "\n"
+
+        for tra in self.sim.transfers:
+            station = self.sim.transfers[tra]
+            val = (f"{station.process}\t"
+                   f"{station.raw_name}\t"
+                   f"{station.type}\t"
+                   f"{station.run_time}\t"
+                   f"{station.max_capacity}\t"
+                   f"{station.buffer}\t"
+                   f"{station.area}")
+            transfer_details = transfer_details + val + "\n"
+
+        f = open(path, "a")
+        f.write(f'{datetime.now().strftime("%Y-%m-%d %H:%M:S")}\n'
+                f'Layout Name: {self.sim.layout_name}\n'
+                f'ROBOTS\n'
+                f'Name\tID\tArea\tGet Time\tPut Time\n'
+                f'{robot_details}'
+                f'STATIONS\n'
+                f'Process\tName\tType\tTime\tCapacity\tIs Buffer\tArea\n'
+                f'{station_details}'
+                f'{transfer_details}'
+                f'Output: {str(self.sim.completed_payloads)}\n\n')
+        f.close()

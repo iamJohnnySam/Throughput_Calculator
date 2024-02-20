@@ -66,6 +66,14 @@ class Station:
         return self._process
 
     @property
+    def run_time(self):
+        return self._time
+
+    @property
+    def max_capacity(self):
+        return self._capacity
+
+    @property
     def available(self):
         stock = len(self.stock) < self._capacity
         return stock and not self._blocked

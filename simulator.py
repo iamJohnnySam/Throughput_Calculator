@@ -15,6 +15,7 @@ class Simulation:
 
         # Sequence
         self.sequence = []
+        self.layout_name = layout_name
 
         # Hardware Objects
         with open(os.path.join("layouts", layout_name), "r") as file:
@@ -28,6 +29,7 @@ class Simulation:
         # Payload objects
         self.new_payload_id = 0
         self.payloads = {}
+        self.completed_payloads = 0
 
         # Simulation Variables
         self.elapsed_time = 0
@@ -244,6 +246,7 @@ class Simulation:
                 logging.log(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
                 print(f"PAYLOAD {payload_id} DONE AT {self.elapsed_time} ({self.elapsed_time / 3600})")
                 del self.payloads[payload_id]
+                self.completed_payloads = self.completed_payloads + 1
 
     def simulate(self, run_time: int):
         for sec in range(run_time):

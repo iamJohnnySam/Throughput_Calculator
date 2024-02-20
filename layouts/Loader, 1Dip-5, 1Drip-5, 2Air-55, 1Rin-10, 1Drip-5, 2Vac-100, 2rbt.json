@@ -40,9 +40,9 @@
     "type": "station",
     "process": "air anneal",
     "area": "wet",
-    "time": 98,
-    "capacity": 2,
-    "count": 2,
+    "time": 55,
+    "capacity": 1,
+    "count": 4,
     "buffer": false,
     "attach": ""
   },
@@ -66,23 +66,13 @@
     "buffer": false,
     "attach": "Rinse"
   },
-  "vac Buffer": {
-    "type": "station",
-    "process": "buffer",
-    "area": "wet",
-    "time": 0,
-    "capacity": 1,
-    "count": 1,
-    "buffer": true,
-    "attach": ""
-  },
   "Vac Anneal": {
     "type": "station",
     "process": "vac anneal",
     "area": "wet",
-    "time": 214,
-    "capacity": 2,
-    "count": 2,
+    "time": 100,
+    "capacity": 1,
+    "count": 4,
     "buffer": false,
     "attach": ""
   },

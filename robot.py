@@ -44,6 +44,14 @@ class Robot:
         return self._robot_id
 
     @property
+    def get_time(self):
+        return self._get_time
+
+    @property
+    def put_time(self):
+        return self._put_time
+
+    @property
     def available(self):
         return len(self.stock) < self._capacity
 
