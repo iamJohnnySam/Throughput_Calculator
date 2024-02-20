@@ -96,7 +96,7 @@ class Simulation:
         self.create_transfer()
 
     def create_robot(self, hw_name: str, num: int, hw_data: dict):
-        self.robots[f'{hw_name}_{str(num)}'] = Robot(robot_id=num,
+        self.robots[f'{hw_name}_{str(num)}'] = Robot(robot_id=f"{hw_data['area']}_{str(num)}",
                                                      robot_name=hw_name,
                                                      area=hw_data['area'],
                                                      get_time=hw_data['get_time'],
