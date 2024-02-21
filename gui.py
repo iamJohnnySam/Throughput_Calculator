@@ -5,7 +5,7 @@ from datetime import datetime
 from simulator import Simulation
 
 
-class Simulator:
+class GUI:
     def __init__(self, master):
         title = "ROBOT LAYOUT SIMULATOR"
 
@@ -28,37 +28,45 @@ class Simulator:
         self.layout_drop.pack(side=tk.LEFT, padx=5)
         self.layout_button = tk.Button(layout_frame, text="Select Layout", command=self.layout_selected)
         self.layout_button.pack(side=tk.LEFT, padx=5)
+        tk.Button(layout_frame, text="Buffer Optimize", command=self.buffer_optimize).pack(side=tk.LEFT, padx=5)
         tk.Button(layout_frame, text="Run all layouts", command=self.run_all_layouts).pack(side=tk.LEFT, padx=5)
+        tk.Button(layout_frame, text="Buffer Optimize all", command=self.buffer_optimize_all).pack(side=tk.LEFT, padx=5)
         tk.Label(master).pack()
         layout_frame.pack()
         tk.Label(master).pack()
 
         # SIMULATION CONTROLS LAYOUT
-        controls_frame = tk.Frame(master)
-        controls_frame.pack()
-        self._gui_elapsed_time = tk.Label(controls_frame, text="SELECT A LAYOUT")
+        self.controls_frame = tk.Frame(master)
+        self.controls_frame.pack()
+        self._gui_elapsed_time = tk.Label(self.controls_frame, text="SELECT A LAYOUT")
         self._gui_elapsed_time.pack()
 
         btn_gap = 2
-        self.btn_01sc = tk.Button(controls_frame, text="Simulate 1 sec", command=self.simulate_1s, state=tk.DISABLED)
+        self.btn_01sc = tk.Button(self.controls_frame, text="Simulate 1 sec", command=self.simulate_1s,
+                                  state=tk.DISABLED)
         self.btn_01sc.pack(side=tk.LEFT, padx=btn_gap)
-        self.btn_15sc = tk.Button(controls_frame, text="Simulate 15sec", command=self.simulate_15s, state=tk.DISABLED)
+        self.btn_15sc = tk.Button(self.controls_frame, text="Simulate 15sec", command=self.simulate_15s,
+                                  state=tk.DISABLED)
         self.btn_15sc.pack(side=tk.LEFT, padx=btn_gap)
-        self.btn_30sc = tk.Button(controls_frame, text="Simulate 30sec", command=self.simulate_30s, state=tk.DISABLED)
+        self.btn_30sc = tk.Button(self.controls_frame, text="Simulate 30sec", command=self.simulate_30s,
+                                  state=tk.DISABLED)
         self.btn_30sc.pack(side=tk.LEFT, padx=btn_gap)
-        self.btn_30mn = tk.Button(controls_frame, text="Simulate 30min", command=self.simulate_30m, state=tk.DISABLED)
+        self.btn_30mn = tk.Button(self.controls_frame, text="Simulate 30min", command=self.simulate_30m,
+                                  state=tk.DISABLED)
         self.btn_30mn.pack(side=tk.LEFT, padx=btn_gap)
-        self.btn_01hr = tk.Button(controls_frame, text="Simulate 1hour", command=self.simulate_1h, state=tk.DISABLED)
+        self.btn_01hr = tk.Button(self.controls_frame, text="Simulate 1hour", command=self.simulate_1h,
+                                  state=tk.DISABLED)
         self.btn_01hr.pack(side=tk.LEFT, padx=btn_gap)
 
-        tk.Label(controls_frame, width=btn_gap).pack(side=tk.LEFT)
-        v_cmd = controls_frame.register(self.validate_input)
-        self.run_time_entry = tk.Entry(controls_frame, width=5, validate="key", validatecommand=(v_cmd, '%d', '%P'))
+        tk.Label(self.controls_frame, width=btn_gap).pack(side=tk.LEFT)
+        v_cmd = self.controls_frame.register(self.validate_input)
+        self.run_time_entry = tk.Entry(self.controls_frame, width=5, validate="key",
+                                       validatecommand=(v_cmd, '%d', '%P'))
         self.run_time_entry.pack(side=tk.LEFT)
-        self.btn_x_sc = tk.Button(controls_frame, text="Simulate 10s", command=self.simulate_x, state=tk.DISABLED)
+        self.btn_x_sc = tk.Button(self.controls_frame, text="Simulate 10s", command=self.simulate_x, state=tk.DISABLED)
         self.btn_x_sc.pack(side=tk.LEFT, padx=btn_gap)
         self.run_time_entry.insert(0, "10")
-        self.btn_22fn = tk.Button(controls_frame, text="Complete 22h", command=self.simulate_remaining,
+        self.btn_22fn = tk.Button(self.controls_frame, text="Complete 22h", command=self.simulate_remaining,
                                   state=tk.DISABLED)
         self.btn_22fn.pack(side=tk.LEFT, padx=btn_gap)
         tk.Label(master).pack()
@@ -83,10 +91,18 @@ class Simulator:
         for layout in list(os.listdir("layouts")):
             self.layout_selected(layout)
             self.simulate_remaining()
-
             self.record()
 
-    def layout_selected(self, layout=""):
+    def buffer_optimize_all(self):
+        for layout in list(os.listdir("layouts")):
+            self.layout_selected(layout, buffer_optimize=True)
+            self.simulate_remaining()
+            self.record()
+
+    def buffer_optimize(self):
+        self.layout_selected(self.selected_layout.get(), buffer_optimize=True)
+
+    def layout_selected(self, layout="", buffer_optimize=False):
         if layout == "":
             layout = self.selected_layout.get()
 
@@ -114,7 +130,8 @@ class Simulator:
         lbl_selected_layout.pack()
         lbl_selected_layout.update()
 
-        self.sim = Simulation(layout, self.sequence_frame, self.layout_frame, self.robot_frame)
+        self.sim = Simulation(layout, self.sequence_frame, self.layout_frame, self.robot_frame,
+                              buffer_optimize=buffer_optimize)
         self.updated_sim_time()
 
     def validate_input(self, action, value_if_allowed):
@@ -135,7 +152,7 @@ class Simulator:
         else:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
-        # self._gui_elapsed_time.update()
+        self.controls_frame.update()
 
     def simulate_1s(self):
         self.layout_drop["state"] = "disabled"

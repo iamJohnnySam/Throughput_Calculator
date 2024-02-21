@@ -10,12 +10,15 @@ from station import Station
 
 
 class Simulation:
-    def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame):
+    def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame,
+                 buffer_optimize=False):
         logging.prepare_log_file(layout_name)
 
         # Sequence
         self.sequence = []
         self.layout_name = layout_name
+
+        self.buffer_optimize = buffer_optimize
 
         # Hardware Objects
         with open(os.path.join("layouts", layout_name), "r") as file:
@@ -78,17 +81,39 @@ class Simulation:
 
     def create_hardware(self, station_file: dict):
         transfer = {}
+        bottleneck_time = 0
+        bottleneck_process = ""
+        bottleneck_area = ""
         for hardware in station_file.keys():
             hw_count = station_file[hardware]["count"]
 
             if "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "station":
                 for qty in range(hw_count):
-                    self.create_station(hardware, qty, station_file[hardware])
+                    time, process, area, capacity = self.create_station(hardware, qty, station_file[hardware])
+                    if time > bottleneck_time and capacity > 1:
+                        bottleneck_time = time
+                        bottleneck_process = process
+                        bottleneck_area = area
+
             elif "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "robot":
                 for qty in range(hw_count):
                     self.create_robot(hardware, qty, station_file[hardware])
             else:
                 raise KeyError("Incorrect layout file. 'type' key is missing")
+
+        if self.buffer_optimize and bottleneck_process != "":
+            print(bottleneck_time, bottleneck_process, bottleneck_area)
+            self.create_station("buffer", 0,
+                                {
+                                    "type": "station",
+                                    "process": "buffer",
+                                    "area": bottleneck_area,
+                                    "time": 0,
+                                    "capacity": 1,
+                                    "count": 1,
+                                    "buffer": True,
+                                    "attach": ""},
+                                bottleneck_process)
 
         for hardware in station_file.keys():
             if "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "station":
@@ -104,8 +129,12 @@ class Simulation:
                                                      get_time=hw_data['get_time'],
                                                      put_time=hw_data['put_time'])
 
-    def create_station(self, hw_name: str, num: int, hw_data: dict):
+    def create_station(self, hw_name: str, num: int, hw_data: dict, insert_before=None):
         process = hw_data['process']
+
+        if insert_before is not None:
+            self.last_created_process = self.sequence[self.sequence.index(insert_before) -1]
+
         if hw_data['buffer']:
             process = f'Buffer | {self.last_created_process}'
 
@@ -119,8 +148,12 @@ class Simulation:
         if not hw_data['buffer']:
             self.last_created_process = process
 
-        if process not in self.sequence:
+        if process not in self.sequence and insert_before is None:
             self.sequence.append(process)
+        elif process not in self.sequence and insert_before is not None:
+            self.sequence.insert(self.sequence.index(insert_before), process)
+
+        return hw_data['time'], process, hw_data['area'], hw_data['capacity']
 
     def attach_station(self, hw_name: str, num: int, hw_data: dict):
         if hw_data['attach'] == "":
