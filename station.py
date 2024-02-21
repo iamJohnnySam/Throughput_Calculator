@@ -162,7 +162,6 @@ class Station:
         self._stock.append(payload)
         logging.log(f"{self._process} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
-
         self.block_station()
 
     def robot_block(self, robot, unblock=False):
@@ -171,7 +170,6 @@ class Station:
         else:
             self._stock.append(robot)
         self.update_gui_payloads()
-
         self.block_station()
 
     def update_gui_payloads(self):

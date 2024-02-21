@@ -160,9 +160,6 @@ class GUI:
         else:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
-        if self.sim.elapsed_time % 60 == 0:
-            self.master.update()
-
 
     def simulate_1s(self):
         self.layout_drop["state"] = "disabled"

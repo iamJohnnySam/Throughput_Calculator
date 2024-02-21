@@ -10,6 +10,8 @@ from station import Station
 
 
 class Simulation:
+    smallest_time = 60
+
     def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame,
                  buffer_optimize=False):
         logging.prepare_log_file(layout_name)
@@ -19,6 +21,8 @@ class Simulation:
         self.layout_name = layout_name
 
         self.buffer_optimize = buffer_optimize
+
+        self.animate = tk.IntVar()
 
         # Hardware Objects
         with open(os.path.join("layouts", layout_name), "r") as file:
@@ -35,12 +39,15 @@ class Simulation:
         self.completed_payloads = 0
 
         # Simulation Variables
+        self.sequence_frame = sequence_frame
+        self.layout_frame = layout_frame
+        self.robot_frame = robot_frame
         self.elapsed_time = 0
-        self.setup_simulation(sequence_frame, layout_frame, robot_frame)
+        self.setup_simulation()
         self._last_all_waiting = False
         self.deadlocked = False
 
-    def setup_simulation(self, sequence_frame, layout_frame, robot_frame):
+    def setup_simulation(self):
         x = 0
         y = 0
         max_widgets = 8
@@ -48,7 +55,7 @@ class Simulation:
             if y > max_widgets:
                 x = x + 1
                 y = 0
-            station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
+            station = tk.Frame(self.layout_frame, highlightthickness=1, highlightbackground="black")
             station.grid(row=x, column=y, padx=1, pady=2, sticky='n')
             y = y + 1
             tk.Label(station, text=st, width=18, font='Helvetica 9 bold').pack()
@@ -58,14 +65,14 @@ class Simulation:
             if y > max_widgets:
                 x = x + 1
                 y = 0
-            station = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
+            station = tk.Frame(self.layout_frame, highlightthickness=1, highlightbackground="black")
             station.grid(row=x, column=y, padx=1, pady=2, sticky='n')
             y = y + 1
             tk.Label(station, text=ts, width=18, font='Helvetica 9 bold').pack()
             self.transfers[ts].gui = station
 
         for rbt in self.robots.keys():
-            robot_item = tk.Frame(robot_frame, highlightthickness=1, highlightbackground="black")
+            robot_item = tk.Frame(self.robot_frame, highlightthickness=1, highlightbackground="black")
             robot_item.pack(side=tk.LEFT, anchor="n", padx=1, pady=2)
             tk.Label(robot_item, text=str(rbt), font='Helvetica 9 bold').pack()
             self.robots[rbt].gui = robot_item
@@ -77,7 +84,9 @@ class Simulation:
             else:
                 sequence += f" > {seq}"
 
-        tk.Label(sequence_frame, text=sequence).pack()
+        tk.Label(self.sequence_frame, text=sequence).pack()
+
+        tk.Checkbutton(self.robot_frame, text="Animate", variable=self.animate, onvalue=1, offvalue=0).pack()
 
     def create_hardware(self, station_file: dict):
         transfer = {}
@@ -122,12 +131,19 @@ class Simulation:
 
         self.create_transfer()
 
+
     def create_robot(self, hw_name: str, num: int, hw_data: dict):
         self.robots[f'{hw_name}_{str(num)}'] = Robot(robot_id=f"{hw_data['area']}_{str(num)}",
                                                      robot_name=hw_name,
                                                      area=hw_data['area'],
                                                      get_time=hw_data['get_time'],
                                                      put_time=hw_data['put_time'])
+
+        if self.smallest_time > hw_data['get_time'] > 5:
+            self.smallest_time = hw_data['get_time']
+
+        if self.smallest_time > hw_data['put_time'] > 5:
+            self.smallest_time = hw_data['put_time']
 
     def create_station(self, hw_name: str, num: int, hw_data: dict, insert_before=None):
         process = hw_data['process']
@@ -147,6 +163,9 @@ class Simulation:
                                                          area=hw_data['area'])
         if not hw_data['buffer']:
             self.last_created_process = process
+
+        if self.smallest_time > hw_data['time'] > 5:
+            self.smallest_time = hw_data['time']
 
         if process not in self.sequence and insert_before is None:
             self.sequence.append(process)
@@ -353,3 +372,7 @@ class Simulation:
 
         for transfer in self.transfers.keys():
             self.transfers[transfer].run()
+
+        if self.elapsed_time % self.smallest_time == 0 and self.animate.get() == 1:
+            self.layout_frame.update()
+            self.robot_frame.update()
