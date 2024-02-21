@@ -2,7 +2,7 @@
   "Robot": {
     "type": "robot",
     "area": "wet",
-    "count": 1,
+    "count": 2,
     "get_time": 15,
     "put_time": 15
   },
@@ -52,7 +52,7 @@
     "area": "wet",
     "time": 10,
     "capacity": 1,
-    "count": 1,
+    "count": 2,
     "buffer": false,
     "attach": ""
   },
@@ -62,7 +62,7 @@
     "area": "wet",
     "time": 5,
     "capacity": 1,
-    "count": 1,
+    "count": 2,
     "buffer": false,
     "attach": "Rinse"
   },

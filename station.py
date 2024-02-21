@@ -145,8 +145,15 @@ class Station:
         logging.log(f"{self._process} REMOVED {payload.payload_id}")
         self.update_gui_payloads()
 
+        self.unblock_station()
+
+    def unblock_station(self):
         if self.attached_station is not None and len(self._stock) == 0:
             self.attached_station.blocked = False
+
+    def block_station(self):
+        if self.attached_station is not None and len(self._stock) > 0:
+            self.attached_station.blocked = True
 
     def robot_place(self, payload: Payload):
         self._wait_start = True
@@ -156,8 +163,7 @@ class Station:
         logging.log(f"{self._process} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
 
-        if self.attached_station is not None and len(self._stock) > 0:
-            self.attached_station.blocked = True
+        self.block_station()
 
     def robot_block(self, robot, unblock=False):
         if unblock:
@@ -165,6 +171,8 @@ class Station:
         else:
             self._stock.append(robot)
         self.update_gui_payloads()
+
+        self.block_station()
 
     def update_gui_payloads(self):
         for widget in self._gui_payloads.winfo_children():
@@ -210,4 +218,3 @@ class Station:
                 self._gui_wait_time["text"] = str(self._waiting_time)
                 self._l_wait = self._l_wait + 1
                 self._gui_l_wait["text"] = str(self._l_wait)
-

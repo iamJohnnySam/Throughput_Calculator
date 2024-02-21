@@ -1,4 +1,5 @@
 import os
+import time
 import tkinter as tk
 from datetime import datetime
 
@@ -6,14 +7,16 @@ from simulator import Simulation
 
 
 class GUI:
-    def __init__(self, master):
+    def __init__(self, root):
         title = "ROBOT LAYOUT SIMULATOR"
 
-        master.title(title)
-        tk.Label(master, text=title, font=("Calibri", 20)).pack()
+        self.master = root
+
+        self.master.title(title)
+        tk.Label(self.master, text=title, font=("Calibri", 20)).pack()
 
         # LAYOUT SELECTION FRAME
-        layout_frame = tk.Frame(master)
+        layout_frame = tk.Frame(self.master)
         layout_options = os.listdir("layouts")
 
         longest_text = 25
@@ -29,14 +32,21 @@ class GUI:
         self.layout_button = tk.Button(layout_frame, text="Select Layout", command=self.layout_selected)
         self.layout_button.pack(side=tk.LEFT, padx=5)
         tk.Button(layout_frame, text="Buffer Optimize", command=self.buffer_optimize).pack(side=tk.LEFT, padx=5)
-        tk.Button(layout_frame, text="Run all layouts", command=self.run_all_layouts).pack(side=tk.LEFT, padx=5)
-        tk.Button(layout_frame, text="Buffer Optimize all", command=self.buffer_optimize_all).pack(side=tk.LEFT, padx=5)
-        tk.Label(master).pack()
+
+        run_all_frame = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
+        run_all_frame.pack(side=tk.LEFT, padx=10)
+        tk.Label(run_all_frame, text="Run All").pack(side=tk.LEFT, padx=10, pady=10)
+        tk.Button(run_all_frame, text="Run all layouts", command=self.run_all_layouts).pack(side=tk.LEFT,
+                                                                                            padx=10, pady=10)
+        tk.Button(run_all_frame, text="Buffer Optimize all", command=self.buffer_optimize_all).pack(side=tk.LEFT,
+                                                                                                    padx=10, pady=10)
+        tk.Label(self.master).pack()
+
         layout_frame.pack()
-        tk.Label(master).pack()
+        tk.Label(self.master).pack()
 
         # SIMULATION CONTROLS LAYOUT
-        self.controls_frame = tk.Frame(master)
+        self.controls_frame = tk.Frame(self.master)
         self.controls_frame.pack()
         self._gui_elapsed_time = tk.Label(self.controls_frame, text="SELECT A LAYOUT")
         self._gui_elapsed_time.pack()
@@ -69,19 +79,19 @@ class GUI:
         self.btn_22fn = tk.Button(self.controls_frame, text="Complete 22h", command=self.simulate_remaining,
                                   state=tk.DISABLED)
         self.btn_22fn.pack(side=tk.LEFT, padx=btn_gap)
-        tk.Label(master).pack()
+        tk.Label(self.master).pack()
 
         # SEQUENCE FRAME
-        self.sequence_frame = tk.Frame(master)
+        self.sequence_frame = tk.Frame(self.master)
         self.sequence_frame.pack()
         tk.Label().pack()
 
         # LAYOUT FRAME
-        self.layout_frame = tk.Frame(master)
+        self.layout_frame = tk.Frame(self.master)
         self.layout_frame.pack()
 
         # ROBOT FRAME
-        self.robot_frame = tk.Frame(master)
+        self.robot_frame = tk.Frame(self.master)
         self.robot_frame.pack()
 
         self.sim: Simulation = Simulation(os.listdir("layouts")[0],
@@ -91,13 +101,11 @@ class GUI:
         for layout in list(os.listdir("layouts")):
             self.layout_selected(layout)
             self.simulate_remaining()
-            self.record()
 
     def buffer_optimize_all(self):
         for layout in list(os.listdir("layouts")):
             self.layout_selected(layout, buffer_optimize=True)
             self.simulate_remaining()
-            self.record()
 
     def buffer_optimize(self):
         self.layout_selected(self.selected_layout.get(), buffer_optimize=True)
@@ -152,7 +160,9 @@ class GUI:
         else:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
-        self.controls_frame.update()
+        if self.sim.elapsed_time % 60 == 0:
+            self.master.update()
+
 
     def simulate_1s(self):
         self.layout_drop["state"] = "disabled"
@@ -209,6 +219,7 @@ class GUI:
         self.updated_sim_time()
         self.layout_drop["state"] = tk.NORMAL
         self.layout_button["state"] = tk.NORMAL
+        self.record()
 
     def record(self):
         path = "log/log.txt"
