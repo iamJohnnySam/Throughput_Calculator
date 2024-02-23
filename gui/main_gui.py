@@ -1,8 +1,10 @@
 import os
-import time
+
 import tkinter as tk
 from datetime import datetime
 
+from gui.layout_manager import LayoutManager
+from gui.new_layout import LayoutEditor
 from simulator import Simulation
 
 
@@ -11,8 +13,23 @@ class GUI:
         title = "ROBOT LAYOUT SIMULATOR"
 
         self.master = root
-
         self.master.title(title)
+
+        menubar = tk.Menu(self.master, tearoff=0)
+
+        file = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label='Simulation', menu=file)
+        file.add_command(label='New Layout', command=self.create_layout)
+        file.add_command(label='Manage Layouts', command=self.manage_layouts)
+        file.add_command(label='Exit', command=self.master.destroy)
+
+        execute = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label='Execute', menu=execute)
+        execute.add_command(label='Run all', command=self.run_all_layouts)
+        execute.add_command(label='Run all with buffer optimization', command=self.buffer_optimize_all)
+        execute.add_command(label='Run all and buffer optimize', command=self.run_buffer_optimize_all)
+        self.master.config(menu=menubar)
+
         tk.Label(self.master, text=title, font=("Calibri", 20)).pack()
 
         # LAYOUT SELECTION FRAME
@@ -33,13 +50,6 @@ class GUI:
         self.layout_button.pack(side=tk.LEFT, padx=5)
         tk.Button(layout_frame, text="Buffer Optimize", command=self.buffer_optimize).pack(side=tk.LEFT, padx=5)
 
-        run_all_frame = tk.Frame(layout_frame, highlightthickness=1, highlightbackground="black")
-        run_all_frame.pack(side=tk.LEFT, padx=10)
-        tk.Label(run_all_frame, text="Run All").pack(side=tk.LEFT, padx=10, pady=10)
-        tk.Button(run_all_frame, text="Run all layouts", command=self.run_all_layouts).pack(side=tk.LEFT,
-                                                                                            padx=10, pady=10)
-        tk.Button(run_all_frame, text="Buffer Optimize all", command=self.buffer_optimize_all).pack(side=tk.LEFT,
-                                                                                                    padx=10, pady=10)
         tk.Label(self.master).pack()
 
         layout_frame.pack()
@@ -104,6 +114,13 @@ class GUI:
 
     def buffer_optimize_all(self):
         for layout in list(os.listdir("layouts")):
+            self.layout_selected(layout, buffer_optimize=True)
+            self.simulate_remaining()
+
+    def run_buffer_optimize_all(self):
+        for layout in list(os.listdir("layouts")):
+            self.layout_selected(layout)
+            self.simulate_remaining()
             self.layout_selected(layout, buffer_optimize=True)
             self.simulate_remaining()
 
@@ -270,3 +287,9 @@ class GUI:
                 f'{transfer_details}'
                 f'Output: {str(self.sim.completed_payloads)}\n\n')
         f.close()
+
+    def create_layout(self, layout=""):
+        LayoutEditor(self.master, layout=layout)
+
+    def manage_layouts(self):
+        LayoutManager(self.master)

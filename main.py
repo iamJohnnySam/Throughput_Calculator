@@ -2,7 +2,7 @@ import json
 import tkinter as tk
 from pathlib import Path
 
-from gui import GUI
+from gui.main_gui import GUI
 
 path = Path("layouts")
 if not path.exists():
