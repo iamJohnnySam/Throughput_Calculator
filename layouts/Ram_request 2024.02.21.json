@@ -20,28 +20,18 @@
     "type": "station",
     "process": "dip coat",
     "area": "wet",
-    "time": 5,
-    "capacity": 1,
+    "time": 11,
+    "capacity": 3,
     "count": 2,
     "buffer": false,
     "attach": ""
-  },
-  "Dip Drip": {
-    "type": "station",
-    "process": "dip drip",
-    "area": "wet",
-    "time": 5,
-    "capacity": 1,
-    "count": 2,
-    "buffer": false,
-    "attach": "Dip Coat"
   },
   "Air Anneal": {
     "type": "station",
     "process": "air anneal",
     "area": "wet",
     "time": 55,
-    "capacity": 1,
+    "capacity": 9,
     "count": 4,
     "buffer": false,
     "attach": ""
@@ -50,29 +40,29 @@
     "type": "station",
     "process": "rinse",
     "area": "wet",
-    "time": 10,
-    "capacity": 1,
+    "time": 16,
+    "capacity": 3,
     "count": 2,
     "buffer": false,
     "attach": ""
   },
-  "Rinse Drip": {
+  "Buffer": {
     "type": "station",
-    "process": "rinse drip",
+    "process": "buffer",
     "area": "wet",
-    "time": 5,
-    "capacity": 1,
-    "count": 2,
-    "buffer": false,
-    "attach": "Rinse"
+    "time": 0,
+    "capacity": 6,
+    "count": 1,
+    "buffer": true,
+    "attach": ""
   },
   "Vac Anneal": {
     "type": "station",
     "process": "vac anneal",
     "area": "wet",
     "time": 100,
-    "capacity": 1,
-    "count": 6,
+    "capacity": 9,
+    "count": 2,
     "buffer": false,
     "attach": ""
   },

@@ -197,7 +197,7 @@ class Station:
                 continue
             contain_waiting_payload = contain_waiting_payload or payload.waiting
 
-        if not self.available and no_robots and not self._blocked and not contain_waiting_payload and not self.complete:
+        if (not self.available and no_robots and not self._blocked and not contain_waiting_payload and not self.complete) or self.buffer:
             self._l_wait = 0
             self._process_time = self._process_time + 1
 

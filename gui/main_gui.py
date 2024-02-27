@@ -1,3 +1,4 @@
+import json
 import os
 
 import tkinter as tk
@@ -103,6 +104,13 @@ class GUI:
         # ROBOT FRAME
         self.robot_frame = tk.Frame(self.master)
         self.robot_frame.pack()
+
+        for layout_name in os.listdir("layouts"):
+            path = os.path.join("layouts", layout_name)
+            with open(path, "r") as file:
+                station_file = json.load(file)
+            if station_file == {}:
+                os.remove(path)
 
         self.sim: Simulation = Simulation(os.listdir("layouts")[0],
                                           self.sequence_frame, self.layout_frame, self.robot_frame)
