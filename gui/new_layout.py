@@ -10,15 +10,15 @@ class LayoutEditor:
     def __init__(self, master, layout):
         self.layout_name = None
         self.current_layout: str = ""
-        new_station_window = tk.Toplevel(master)
-        new_station_window.title("New Window")
-        new_station_window.geometry("800x500")
+        self.new_station_window = tk.Toplevel(master)
+        self.new_station_window.title("New Window")
+        self.new_station_window.geometry("1200x500")
 
         title = "CREATE LAYOUT"
-        new_station_window.title(title)
-        tk.Label(new_station_window, text=title, font=("Calibri", 20)).pack()
+        self.new_station_window.title(title)
+        tk.Label(self.new_station_window, text=title, font=("Calibri", 20)).pack()
 
-        self.main_frame = tk.Frame(new_station_window)
+        self.main_frame = tk.Frame(self.new_station_window)
         self.main_frame.pack()
 
         self.breakdown_layout(layout)
@@ -31,10 +31,8 @@ class LayoutEditor:
 
         top_layout = tk.Frame(self.main_frame)
         top_layout.pack()
-        left_layout = tk.Frame(self.main_frame, width=self.main_frame.winfo_width() / 3)
-        left_layout.pack(side=tk.LEFT, expand=True)
-        right_layout = tk.Frame(self.main_frame, width=self.main_frame.winfo_width() * 2 / 3)
-        right_layout.pack(side=tk.LEFT)
+        stations_layout = tk.Frame(self.main_frame)
+        stations_layout.pack(side=tk.LEFT)
         bottom_layout = tk.Frame(self.main_frame)
         bottom_layout.pack()
 
@@ -55,7 +53,7 @@ class LayoutEditor:
         tk.Button(top_layout, text="Rename Layout",
                   command=partial(self.rename_layout, self.current_layout, self.layout_name.get())).pack(side=tk.LEFT)
 
-        self.populate_stations(left_layout)
+        self.populate_stations(stations_layout)
 
     def populate_stations(self, top_layout: tk.Frame):
         for widget in top_layout.winfo_children():
@@ -64,47 +62,78 @@ class LayoutEditor:
         f = open(os.path.join(global_var.layouts, self.current_layout))
         data: dict = json.load(f)
 
-        v = tk.Scrollbar(top_layout, orient='vertical')
-        v.pack(side=tk.RIGHT, fill=tk.Y)
-
-        layout = tk.Canvas(top_layout)
-        layout.pack(expand=True, fill=tk.Y)
-        v.config(command=layout.yview)
+        layout = tk.Frame(top_layout)
+        layout.pack()
 
         for station in data.keys():
             frame = tk.Frame(layout, highlightthickness=1, highlightbackground="black")
             frame.pack(padx=5, pady=5)
 
-            tk.Label(frame, text="Name: ").grid(row=0, column=0, padx=3)
-            tk.Label(frame, text="Type: ").grid(row=0, column=2, padx=3)
-            tk.Label(frame, text="Process: ").grid(row=1, column=0, padx=3)
-            tk.Label(frame, text="Area: ").grid(row=1, column=2, padx=3)
-            tk.Label(frame, text="Time: ").grid(row=2, column=0, padx=3)
-            tk.Label(frame, text="Capacity: ").grid(row=2, column=2, padx=3)
-            tk.Label(frame, text="Count: ").grid(row=3, column=0, padx=3)
+            small_width = 7
 
-            tk.Label(frame, text=station).grid(row=0, column=1, padx=3)
-            tk.Label(frame, text=data[station]['type']).grid(row=0, column=3, padx=3)
-            try:
-                tk.Label(frame, text=data[station]['process']).grid(row=1, column=1, padx=3)
-            except KeyError:
-                tk.Label(frame, text='transfer').grid(row=1, column=1, padx=3)
-            tk.Label(frame, text=data[station]['area']).grid(row=1, column=3, padx=3)
-            try:
-                tk.Label(frame, text=data[station]['time']).grid(row=2, column=1, padx=3)
-            except KeyError:
-                tk.Label(frame, text=f"{data[station]['get_time']} | {data[station]['put_time']}").grid(row=2, column=1,
-                                                                                                        padx=3)
-            try:
-                tk.Label(frame, text=str(data[station]['capacity'])).grid(row=2, column=3, padx=3)
-            except KeyError:
-                tk.Label(frame, text="1").grid(row=2, column=3, padx=3)
-            tk.Label(frame, text=str(data[station]['count'])).grid(row=3, column=1, padx=3)
+            tk.Label(frame, text="Name: ", width=small_width).pack(side=tk.LEFT)
+            station_name = tk.Entry(frame, width=12)
+            station_name.insert(0, station)
+            station_name.pack(side=tk.LEFT)
 
-            tk.Button(frame, text="\U00002B06").grid(row=3, column=2, padx=3)
-            tk.Button(frame, text="\U00002B07").grid(row=3, column=3, padx=3)
+            tk.Label(frame, text="Type: ", width=small_width).pack(side=tk.LEFT)
+            tk.Label(frame, text=data[station]['type'], width=small_width).pack(side=tk.LEFT)
 
-        layout.config(scrollregion=(0,0,layout.tk.X,layout.tk.Y), yscrollcommand=v.set)
+            tk.Label(frame, text="Area: ", width=small_width).pack(side=tk.LEFT)
+            station_area = tk.Entry(frame, width=small_width)
+            station_area.insert(0, data[station]['area'])
+            station_area.pack(side=tk.LEFT)
+
+            if data[station]['type'] == "robot":
+                tk.Label(frame, text="Get Time: ", width=10).pack(side=tk.LEFT)
+                station_get = tk.Entry(frame, width=10)
+                station_get.insert(0, data[station]['get_time'])
+                station_get.pack(side=tk.LEFT)
+
+            elif data[station]['type'] == "station":
+                tk.Label(frame, text="Process: ", width=10).pack(side=tk.LEFT)
+                station_process = tk.Entry(frame, width=10)
+                station_process.insert(0, data[station]['process'])
+                station_process.pack(side=tk.LEFT)
+
+            if data[station]['type'] == "robot":
+                tk.Label(frame, text="Put Time: ", width=10).pack(side=tk.LEFT)
+                station_put = tk.Entry(frame, width=small_width)
+                station_put.insert(0, data[station]['put_time'])
+                station_put.pack(side=tk.LEFT)
+
+            elif data[station]['type'] == "station":
+                tk.Label(frame, text="Time: ", width=10).pack(side=tk.LEFT)
+                station_time = tk.Entry(frame, width=small_width)
+                station_time.insert(0, data[station]['time'])
+                station_time.pack(side=tk.LEFT)
+
+            tk.Label(frame, text="Capacity: ", width=10).pack(side=tk.LEFT)
+            if data[station]['type'] == "robot":
+                tk.Label(frame, text="1", width=small_width).pack(side=tk.LEFT)
+
+            elif data[station]['type'] == "station":
+                station_capacity = tk.Entry(frame, width=10)
+                station_capacity.insert(0, data[station]['capacity'])
+                station_capacity.pack(side=tk.LEFT)
+
+            tk.Label(frame, text="Count: ", width=small_width).pack(side=tk.LEFT)
+            station_count = tk.Entry(frame, width=small_width)
+            station_count.insert(0, data[station]['count'])
+            station_count.pack(side=tk.LEFT)
+
+            tk.Button(frame, text="\U00002B06", width=2).pack(side=tk.LEFT)
+            tk.Button(frame, text="\U00002B07", width=2).pack(side=tk.LEFT)
+
+        tk.Label(layout).pack()
+
+        tk.Button(layout, text="Add Robot", width=15).pack(side=tk.LEFT, padx=5)
+        tk.Button(layout, text="Add Station", width=15).pack(side=tk.LEFT, padx=5)
+        tk.Button(layout, text="Add Buffer", width=15).pack(side=tk.LEFT, padx=5)
+
+        tk.Button(layout, text="Close", width=15, command=self.new_station_window.destroy).pack(side=tk.RIGHT, padx=5)
+        tk.Button(layout, text="Save & Close", width=20, command=self.new_station_window.destroy).pack(side=tk.RIGHT,
+                                                                                                       padx=5)
 
     def rename_layout(self, old_name: str, new_name: str):
         if not new_name.endswith(".json"):

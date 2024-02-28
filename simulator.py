@@ -1,5 +1,6 @@
 import itertools
 import json
+import math
 import os.path
 import tkinter as tk
 
@@ -10,10 +11,9 @@ from station import Station
 
 
 class Simulation:
-    smallest_time = 60
 
     def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame,
-                 buffer_optimize=False):
+                 buffer_optimize=False, layout_optimize=False):
         logging.prepare_log_file(layout_name)
 
         # Sequence
@@ -22,15 +22,18 @@ class Simulation:
 
         self.buffer_optimize = buffer_optimize
 
-        self.animate = tk.IntVar()
-
         # Hardware Objects
         with open(os.path.join("layouts", layout_name), "r") as file:
             station_file = json.load(file)
         self.stations = {}
         self.robots = {}
         self.transfers = {}
-        self.create_hardware(station_file)
+
+        if layout_optimize:
+            self.create_optimized_hardware(station_file)
+        else:
+            self.create_hardware(station_file)
+
         self.last_created_process = "Null"
 
         # Payload objects
@@ -86,13 +89,82 @@ class Simulation:
 
         tk.Label(self.sequence_frame, text=sequence).pack()
 
-        tk.Checkbutton(self.robot_frame, text="Animate", variable=self.animate, onvalue=1, offvalue=0).pack()
+    def create_optimized_hardware(self, station_file: dict):
+        self.buffer_optimize = True
+
+        robot_time = {}
+        station_transfer_time = {}
+        station_time = {}
+
+        for robot in station_file.keys():
+            if "type" in station_file[robot].keys() and station_file[robot]["type"] == "robot":
+                area = station_file[robot]["area"]
+                robot_time[area] = (station_file[robot]["get_time"] + station_file[robot]["put_time"]) / station_file[robot]["count"]
+
+        for hardware in station_file.keys():
+            if "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "station":
+                station_transfer_time[hardware] = {"time": robot_time[station_file[hardware]["area"]],
+                                                   "process": station_file[hardware]["process"],
+                                                   "count": station_file[hardware]["count"],
+                                                   "capacity": station_file[hardware]["capacity"]}
+
+        for name, hardware in station_file.items():
+            if "type" in hardware.keys() and hardware["type"] == "station":
+                process = hardware["process"]
+                time = hardware["time"]
+                capacity = hardware["capacity"]
+
+                area_count = 0
+                robot_time = 0
+                for key, value in station_transfer_time.items():
+                    if value["process"] == process:
+                        area_count += 1
+                        robot_time += value["time"]
+
+                takt = ((time * 60) + ((robot_time / area_count) * capacity)) / (capacity * area_count)
+
+                if process in station_time.keys():
+                    if station_time[process] > takt:
+                        station_time[process] = takt
+                else:
+                    station_time[process] = takt
+
+        bottleneck_time = 22 * 3600
+        for name, value in station_time.items():
+            if bottleneck_time > value > 60:
+                bottleneck_time = value
+
+        new_station_file: dict = {}
+
+        for name, hardware in station_file.items():
+            if "type" in hardware.keys() and hardware["type"] == "robot":
+                new_station_file[name] = hardware
+
+            if "type" in hardware.keys() and hardware["type"] == "station":
+                name = f'{hardware["process"]}_{hardware["area"]}'
+                new_station_file[name] = hardware
+                takt = station_time[hardware["process"]]
+
+                area_count = 0
+                for key, value in station_transfer_time.items():
+                    if value["process"] == hardware["process"]:
+                        area_count = area_count + 1
+
+                new_station_file[name]["count"] = math.ceil(takt / (bottleneck_time * area_count))
+                print(name, new_station_file[name]["count"])
+
+
+
+        self.create_hardware(new_station_file)
 
     def create_hardware(self, station_file: dict):
-        transfer = {}
         bottleneck_time = 0
         bottleneck_process = ""
         bottleneck_area = ""
+        bottleneck_capacity = 1
+        prev_capacity = 0
+        bottleneck_previous_capacity = 0
+
         for hardware in station_file.keys():
             hw_count = station_file[hardware]["count"]
 
@@ -103,6 +175,9 @@ class Simulation:
                         bottleneck_time = time
                         bottleneck_process = process
                         bottleneck_area = area
+                        bottleneck_capacity = capacity
+                        bottleneck_previous_capacity = prev_capacity
+                    prev_capacity = capacity
 
             elif "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "robot":
                 for qty in range(hw_count):
@@ -111,14 +186,13 @@ class Simulation:
                 raise KeyError("Incorrect layout file. 'type' key is missing")
 
         if self.buffer_optimize and bottleneck_process != "":
-            print(bottleneck_time, bottleneck_process, bottleneck_area)
-            self.create_station("buffer", 0,
+            self.create_station(f"buffer_{bottleneck_area}", 0,
                                 {
                                     "type": "station",
                                     "process": "buffer",
                                     "area": bottleneck_area,
                                     "time": 0,
-                                    "capacity": 1,
+                                    "capacity": max(1, (bottleneck_capacity - bottleneck_previous_capacity)),
                                     "count": 1,
                                     "buffer": True,
                                     "attach": ""},
@@ -131,7 +205,6 @@ class Simulation:
 
         self.create_transfer()
 
-
     def create_robot(self, hw_name: str, num: int, hw_data: dict):
         self.robots[f'{hw_name}_{str(num)}'] = Robot(robot_id=f"{hw_data['area']}_{str(num)}",
                                                      robot_name=hw_name,
@@ -139,17 +212,13 @@ class Simulation:
                                                      get_time=hw_data['get_time'],
                                                      put_time=hw_data['put_time'])
 
-        if self.smallest_time > hw_data['get_time'] > 5:
-            self.smallest_time = hw_data['get_time']
-
-        if self.smallest_time > hw_data['put_time'] > 5:
-            self.smallest_time = hw_data['put_time']
-
     def create_station(self, hw_name: str, num: int, hw_data: dict, insert_before=None):
         process = hw_data['process']
 
         if insert_before is not None:
-            self.last_created_process = self.sequence[self.sequence.index(insert_before) -1]
+            self.last_created_process:str = self.sequence[self.sequence.index(insert_before) - 1]
+
+            self.last_created_process.replace("Buffer | ", "")
 
         if hw_data['buffer']:
             process = f'Buffer | {self.last_created_process}'
@@ -163,9 +232,6 @@ class Simulation:
                                                          area=hw_data['area'])
         if not hw_data['buffer']:
             self.last_created_process = process
-
-        if self.smallest_time > hw_data['time'] > 5:
-            self.smallest_time = hw_data['time']
 
         if process not in self.sequence and insert_before is None:
             self.sequence.append(process)
@@ -372,7 +438,3 @@ class Simulation:
 
         for transfer in self.transfers.keys():
             self.transfers[transfer].run()
-
-        if self.elapsed_time % self.smallest_time == 0 and self.animate.get() == 1:
-            self.layout_frame.update()
-            self.robot_frame.update()

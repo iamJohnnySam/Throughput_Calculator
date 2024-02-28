@@ -99,7 +99,7 @@ class Station:
         # Process Items Frame
         self.process_frame = ttk.Frame(self._gui)
         self.process_frame.pack(padx=4)
-        self._gui_capacity = tk.Label(self.process_frame, text=str(len(self.stock)))
+        self._gui_capacity = tk.Label(self.process_frame, text=f'{len(self._stock)} / {self._capacity}')
         self._gui_wait_time = tk.Label(self.process_frame, text="Pending")
         self._gui_l_wait = tk.Label(self.process_frame, text="Pending")
         self._gui_block = tk.Label(self.process_frame, text="False")
@@ -185,7 +185,7 @@ class Station:
                          fg="green" if payload.waiting else "black").pack()
             if i >= 4:
                 break
-        self._gui_capacity["text"] = str(len(self._stock))
+        self._gui_capacity["text"] = f'{len(self._stock)} / {self._capacity}'
         self._gui_block["text"] = str(self._blocked)
 
     def run(self):
@@ -201,7 +201,7 @@ class Station:
             self._l_wait = 0
             self._process_time = self._process_time + 1
 
-            self._gui_process_time["text"] = "time: " + str(self._time - self._process_time)
+            self._gui_process_time["text"] = f"time: {self._time - self._process_time} / {self._time}"
             self._gui_process_time["fg"] = 'red' if self._process_time >= self._time else 'black'
 
             if self._time <= self._process_time:

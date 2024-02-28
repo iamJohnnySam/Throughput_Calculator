@@ -11,6 +11,8 @@ from simulator import Simulation
 
 class GUI:
     def __init__(self, root):
+        self.animate = tk.BooleanVar()
+
         title = "ROBOT LAYOUT SIMULATOR"
 
         self.master = root
@@ -26,6 +28,8 @@ class GUI:
 
         execute = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label='Execute', menu=execute)
+        execute.add_checkbutton(label='Animate', onvalue=1, offvalue=0, variable=self.animate)
+        execute.add_separator()
         execute.add_command(label='Run all', command=self.run_all_layouts)
         execute.add_command(label='Run all with buffer optimization', command=self.buffer_optimize_all)
         execute.add_command(label='Run all and buffer optimize', command=self.run_buffer_optimize_all)
@@ -49,7 +53,10 @@ class GUI:
         self.layout_drop.pack(side=tk.LEFT, padx=5)
         self.layout_button = tk.Button(layout_frame, text="Select Layout", command=self.layout_selected)
         self.layout_button.pack(side=tk.LEFT, padx=5)
-        tk.Button(layout_frame, text="Buffer Optimize", command=self.buffer_optimize).pack(side=tk.LEFT, padx=5)
+        self.layout_buffer = tk.Button(layout_frame, text="Buffer Optimize", command=self.buffer_optimize)
+        self.layout_buffer.pack(side=tk.LEFT, padx=5)
+        self.layout_optimize = tk.Button(layout_frame, text="Layout Optimize", command=self.layout_optimize)
+        self.layout_optimize.pack(side=tk.LEFT, padx=5)
 
         tk.Label(self.master).pack()
 
@@ -135,7 +142,10 @@ class GUI:
     def buffer_optimize(self):
         self.layout_selected(self.selected_layout.get(), buffer_optimize=True)
 
-    def layout_selected(self, layout="", buffer_optimize=False):
+    def layout_optimize(self):
+        self.layout_selected(self.selected_layout.get(), layout_optimize=True)
+
+    def layout_selected(self, layout="", buffer_optimize=False, layout_optimize=False):
         if layout == "":
             layout = self.selected_layout.get()
 
@@ -164,7 +174,8 @@ class GUI:
         lbl_selected_layout.update()
 
         self.sim = Simulation(layout, self.sequence_frame, self.layout_frame, self.robot_frame,
-                              buffer_optimize=buffer_optimize)
+                              buffer_optimize=buffer_optimize,
+                              layout_optimize=layout_optimize)
         self.updated_sim_time()
 
     def validate_input(self, action, value_if_allowed):
@@ -186,62 +197,54 @@ class GUI:
             self._gui_elapsed_time["text"] = (f"SIMULATION TIME = {str(self.sim.elapsed_time)}sec\t"
                                               f"{str(self.sim.elapsed_time / 3600)}hours")
 
-    def simulate_1s(self):
+    def simulate(self, time):
         self.layout_drop["state"] = "disabled"
         self.layout_button["state"] = "disabled"
-        self.sim.simulate(1)
+        self.layout_buffer["state"] = "disabled"
+        self.layout_optimize["state"] = "disabled"
+
+        time_jump = 30
+        time_intervals = int(time / time_jump)
+        time_left = time % time_jump
+
+        for jump in range(time_intervals):
+            self.sim.simulate(time_jump)
+            self.updated_sim_time()
+            if self.animate.get():
+                self.robot_frame.update()
+                self.layout_frame.update()
+                self._gui_elapsed_time.update()
+        self.sim.simulate(time_left)
         self.updated_sim_time()
+
+        if self.sim.elapsed_time >= (22 * 60 * 60) > self.sim.elapsed_time - time:
+            self.record()
+
         self.layout_drop["state"] = tk.NORMAL
         self.layout_button["state"] = tk.NORMAL
+        self.layout_buffer["state"] = tk.NORMAL
+        self.layout_optimize["state"] = tk.NORMAL
+
+    def simulate_1s(self):
+        self.simulate(1)
 
     def simulate_15s(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate(15)
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
+        self.simulate(15)
 
     def simulate_30s(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate(30)
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
+        self.simulate(30)
 
     def simulate_30m(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate(30 * 60)
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
+        self.simulate(30 * 60)
 
     def simulate_1h(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate(60 * 60)
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
+        self.simulate(60 * 60)
 
     def simulate_x(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate(int(self.run_time_entry.get()))
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
+        self.simulate(int(self.run_time_entry.get()))
 
     def simulate_remaining(self):
-        self.layout_drop["state"] = "disabled"
-        self.layout_button["state"] = "disabled"
-        self.sim.simulate((22 * 60 * 60) - self.sim.elapsed_time)
-        self.updated_sim_time()
-        self.layout_drop["state"] = tk.NORMAL
-        self.layout_button["state"] = tk.NORMAL
-        self.record()
+        self.simulate((22 * 60 * 60) - self.sim.elapsed_time)
 
     def record(self):
         path = "log/log.txt"
@@ -293,7 +296,8 @@ class GUI:
                 f'Process\tName\tType\tTime\tCapacity\tIs Buffer\tArea\n'
                 f'{station_details}'
                 f'{transfer_details}'
-                f'Output: {str(self.sim.completed_payloads)}\n\n')
+                f'Output: {str(self.sim.completed_payloads)} in {self.sim.elapsed_time} seconds '
+                f'({self.sim.elapsed_time/3600} hours).\n\n')
         f.close()
 
     def create_layout(self, layout=""):
