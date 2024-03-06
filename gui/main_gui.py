@@ -12,6 +12,7 @@ from simulator import Simulation
 class GUI:
     def __init__(self, root):
         self.animate = tk.BooleanVar()
+        self.log_process = tk.BooleanVar()
 
         title = "ROBOT LAYOUT SIMULATOR"
 
@@ -29,6 +30,8 @@ class GUI:
         execute = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label='Execute', menu=execute)
         execute.add_checkbutton(label='Animate', onvalue=1, offvalue=0, variable=self.animate)
+        execute.add_separator()
+        execute.add_checkbutton(label='Log Process', onvalue=1, offvalue=0, variable=self.log_process)
         execute.add_separator()
         execute.add_command(label='Run all', command=self.run_all_layouts)
         execute.add_command(label='Run all with buffer optimization', command=self.buffer_optimize_all)
@@ -120,7 +123,8 @@ class GUI:
                 os.remove(path)
 
         self.sim: Simulation = Simulation(os.listdir("layouts")[0],
-                                          self.sequence_frame, self.layout_frame, self.robot_frame)
+                                          self.sequence_frame, self.layout_frame, self.robot_frame,
+                                          log=self.log_process.get())
 
     def run_all_layouts(self):
         for layout in list(os.listdir("layouts")):
@@ -175,7 +179,8 @@ class GUI:
 
         self.sim = Simulation(layout, self.sequence_frame, self.layout_frame, self.robot_frame,
                               buffer_optimize=buffer_optimize,
-                              layout_optimize=layout_optimize)
+                              layout_optimize=layout_optimize,
+                              log=self.log_process.get())
         self.updated_sim_time()
 
     def validate_input(self, action, value_if_allowed):

@@ -44,6 +44,8 @@ class Station:
         self.process_frame = None
         self._gui_block = None
 
+        self.log = False
+
     @property
     def stock(self):
         return self._stock
@@ -142,7 +144,8 @@ class Station:
     def robot_pickup(self, payload: Payload):
         self._stock.remove(payload)
         self._process_time = 0
-        logging.log(f"{self._process} REMOVED {payload.payload_id}")
+        if self.log:
+            logging.log(f"{self._process} REMOVED {payload.payload_id}")
         self.update_gui_payloads()
 
         self.unblock_station()
@@ -160,7 +163,8 @@ class Station:
         self.complete = False
         self._process_time = 0
         self._stock.append(payload)
-        logging.log(f"{self._process} RECEIVED {payload.payload_id}")
+        if self.log:
+            logging.log(f"{self._process} RECEIVED {payload.payload_id}")
         self.update_gui_payloads()
         self.block_station()
 
@@ -188,7 +192,8 @@ class Station:
         self._gui_capacity["text"] = f'{len(self._stock)} / {self._capacity}'
         self._gui_block["text"] = str(self._blocked)
 
-    def run(self):
+    def run(self, log=False):
+        self.log = log
         contain_waiting_payload = False
         no_robots = True
         for payload in self._stock:

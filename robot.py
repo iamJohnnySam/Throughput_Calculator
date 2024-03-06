@@ -31,6 +31,8 @@ class Robot:
         self._gui_payloads = None
         self._gui = None
 
+        self.log = False
+
     @property
     def stock(self):
         return self._stock
@@ -81,7 +83,8 @@ class Robot:
         self._gui_location.grid(row=1, column=1)
 
     def pick(self, payload: Payload, current_station: Station, next_station: Station):
-        logging.log(f"ROBOT {self._robot_id} > PICK PAYLOAD {payload.payload_id} FROM {current_station.raw_name}.")
+        if self.log:
+            logging.log(f"ROBOT {self._robot_id} > PICK PAYLOAD {payload.payload_id} FROM {current_station.raw_name}.")
         self.next_station = next_station
 
         payload.robot_pickup()
@@ -101,7 +104,8 @@ class Robot:
         self.update_gui_payloads()
 
     def place(self, payload: Payload):
-        logging.log(f"ROBOT {self._robot_id} PLACE PAYLOAD {payload.payload_id} TO {self.next_station}")
+        if self.log:
+            logging.log(f"ROBOT {self._robot_id} PLACE PAYLOAD {payload.payload_id} TO {self.next_station}")
         # self.current_station.robot_pickup(payload)
         payload.robot_pickup()
         self._get_action = False
@@ -118,18 +122,21 @@ class Robot:
             tk.Label(self._gui_payloads, text="PAYLOAD " + str(payload.payload_id)).pack()
         self._gui_process_time["text"] = self._transfer_time - self._current_time
 
-    def run(self):
+    def run(self, log=False):
+        self.log = log
         self._current_time = self._current_time + 1
 
         if self._get_action and self._current_time == self._transfer_time:
-            logging.log(f"ROBOT {self._robot_id} > PICK ARRIVE {self.stock[0].payload_id} "
+            if self.log:
+                logging.log(f"ROBOT {self._robot_id} > PICK ARRIVE {self.stock[0].payload_id} "
                         f"AT {self.current_station.raw_name}")
             self.place(self.stock[0])
             self._gui_location["text"] = self.current_station.raw_name
             self.current_station.robot_pickup(self.stock[0])
 
         if self._put_action and self._current_time == self._transfer_time:
-            logging.log(f"ROBOT {self._robot_id} > PLACE ARRIVE {self.stock[0].payload_id} "
+            if self.log:
+                logging.log(f"ROBOT {self._robot_id} > PLACE ARRIVE {self.stock[0].payload_id} "
                         f"AT {self.next_station.raw_name}")
             self._put_action = False
             self._gui_location["text"] = self.stock[0].current_station

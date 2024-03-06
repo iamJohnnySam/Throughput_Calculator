@@ -13,7 +13,7 @@ from station import Station
 class Simulation:
 
     def __init__(self, layout_name: str, sequence_frame: tk.Frame, layout_frame: tk.Frame, robot_frame: tk.Frame,
-                 buffer_optimize=False, layout_optimize=False):
+                 buffer_optimize=False, layout_optimize=False, log=False):
         logging.prepare_log_file(layout_name)
 
         # Sequence
@@ -49,6 +49,8 @@ class Simulation:
         self.setup_simulation()
         self._last_all_waiting = False
         self.deadlocked = False
+
+        self.log = log
 
     def setup_simulation(self):
         x = 0
@@ -99,7 +101,8 @@ class Simulation:
         for robot in station_file.keys():
             if "type" in station_file[robot].keys() and station_file[robot]["type"] == "robot":
                 area = station_file[robot]["area"]
-                robot_time[area] = (station_file[robot]["get_time"] + station_file[robot]["put_time"]) / station_file[robot]["count"]
+                robot_time[area] = (station_file[robot]["get_time"] + station_file[robot]["put_time"]) / \
+                                   station_file[robot]["count"]
 
         for hardware in station_file.keys():
             if "type" in station_file[hardware].keys() and station_file[hardware]["type"] == "station":
@@ -152,8 +155,6 @@ class Simulation:
 
                 new_station_file[name]["count"] = math.ceil(takt / (bottleneck_time * area_count))
                 print(name, new_station_file[name]["count"])
-
-
 
         self.create_hardware(new_station_file)
 
@@ -216,7 +217,7 @@ class Simulation:
         process = hw_data['process']
 
         if insert_before is not None:
-            self.last_created_process:str = self.sequence[self.sequence.index(insert_before) - 1]
+            self.last_created_process: str = self.sequence[self.sequence.index(insert_before) - 1]
 
             self.last_created_process.replace("Buffer | ", "")
 
@@ -302,8 +303,10 @@ class Simulation:
             self.new_payload_id = self.new_payload_id + 1
             self.payloads[self.new_payload_id]: Payload = Payload(create=time,
                                                                   payload_id=self.new_payload_id,
-                                                                  current_station=first_station)
-            logging.log("Payload Created with ID > " + str(self.new_payload_id))
+                                                                  current_station=first_station,
+                                                                  log=self.log)
+            if self.log:
+                logging.log("Payload Created with ID > " + str(self.new_payload_id))
             self.stations[first_station].stock.append(self.payloads[self.new_payload_id])
             self.stations[first_station].update_gui_payloads()
 
@@ -361,20 +364,24 @@ class Simulation:
             except KeyError:
                 continue
             if current_process == self.sequence[-1]:
-                logging.log(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
+                if self.log:
+                    logging.log(f"------------- PAYLOAD {payload_id} DONE AT {self.elapsed_time} -----------------")
                 print(f"PAYLOAD {payload_id} DONE AT {self.elapsed_time} ({self.elapsed_time / 3600})")
                 del self.payloads[payload_id]
                 self.completed_payloads = self.completed_payloads + 1
 
-    def simulate(self, run_time: int):
+    def simulate(self, run_time: int, log=False):
+        self.log = log
         for sec in range(run_time):
             self.elapsed_time = self.elapsed_time + 1
             if self.deadlocked:
                 return
-            logging.log(f"\nTime = {self.elapsed_time}")
+
+            if self.log:
+                logging.log(f"\nTime = {self.elapsed_time}")
             self.create_payload(self.elapsed_time)
             self.move_payloads()
-            self.run_stations()
+            self.run_stations(log=log)
             self.delete_completed_payloads()
 
     def move_payloads(self):
@@ -391,7 +398,8 @@ class Simulation:
                     current_station: Station = self.stations[payload.current_station]
                 except KeyError:
                     current_station: Station = self.transfers[payload.current_station]
-                logging.log(f"PAYLOAD {payload_id} IS WAITING AT {payload.current_station} FOR {next_station}.")
+                if self.log:
+                    logging.log(f"PAYLOAD {payload_id} IS WAITING AT {payload.current_station} FOR {next_station}.")
 
                 transfer_started = False
                 for st in self.stations.keys():
@@ -408,7 +416,8 @@ class Simulation:
                 all_waiting = False
 
         if all_waiting:
-            self.deadlocked = True if (all_waiting and self._last_all_waiting) else False
+            # todo
+            # self.deadlocked = True if (all_waiting and self._last_all_waiting) else False
             self._last_all_waiting = True
         else:
             self._last_all_waiting = False
@@ -429,12 +438,12 @@ class Simulation:
                 return True
         return False
 
-    def run_stations(self):
+    def run_stations(self, log):
         for robot in self.robots.keys():
-            self.robots[robot].run()
+            self.robots[robot].run(log=log)
 
         for station in self.stations.keys():
-            self.stations[station].run()
+            self.stations[station].run(log=log)
 
         for transfer in self.transfers.keys():
-            self.transfers[transfer].run()
+            self.transfers[transfer].run(log=log)

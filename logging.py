@@ -14,9 +14,7 @@ def prepare_log_file(log_file):
 
     path = "log/" + log_file + ".txt"
 
-    if not os.path.isfile(path):
-        file = open(path, "w")
-    else:
+    if os.path.isfile(path):
         os.remove(path)
 
 
